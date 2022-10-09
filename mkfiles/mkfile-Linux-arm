@@ -8,19 +8,22 @@ OS=		o
 AR=		ar
 ARFLAGS=	ruvs
 
-AS=		arm-gcc -c 
+AS=		gcc -c 
 ASFLAGS=
 
-CC=		arm-gcc -c 
-CFLAGS=		-O\
+CC=		gcc -c 
+CFLAGS=		-g\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
 		-I$ROOT/Linux/arm/include\
 		-I$ROOT/include\
-		-DLINUX_ARM
+		-DLINUX_ARM\
+		-fcommon\
+		#"-march=armv4"
 
 ANSICPP=
-LD=		arm-gcc 
-LDFLAGS=	
+LD=		gcc 
+LDFLAGS=	-fcommon \
+		#-Wl,--verbose
 
 SYSLIBS=
 

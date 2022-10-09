@@ -2,6 +2,7 @@
 #include "isa.h"
 #include "interp.h"
 #include "raise.h"
+#include <sys/mman.h>
 
 /*
  * to do:
@@ -1795,6 +1796,11 @@ preamble(void)
 	pass--;
 
 	segflush(comvec, 10 * sizeof(*code));
+	if(mprotect((void*)(((uint)comvec)&0xFFFFF000), ((uint)comvec)&0x00000FFF + 10*sizeof(*code), PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+		perror("mprotect");
+	} else {
+		print("preamble %.8p, %d\n",comvec, 10 * sizeof(*code));
+	}
 }
 
 static void
@@ -2270,6 +2276,11 @@ compile(Module *m, int size, Modlink *ml)
 	m->prog = (Inst*)base;
 	m->compiled = 1;
 	segflush(base, n*sizeof(*base));
+	if(mprotect((void*)((uint)base&0xFFFFF000), ((uint)base)&0x00000FFF + n*sizeof(*base), PROT_READ | PROT_WRITE | PROT_EXEC) != 0){
+		perror("mprotect");
+	} else {
+		print("compile %.8p, %d\n",base, n* sizeof(*base));
+	}
 	return 1;
 bad:
 	free(patch);

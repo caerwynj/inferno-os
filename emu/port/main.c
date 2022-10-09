@@ -26,6 +26,8 @@ extern	int	mflag;
 	ulong	displaychan;
 char *cputype;
 
+void (*coherence)(void);
+
 static void
 usage(void)
 {
