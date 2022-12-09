@@ -19,11 +19,12 @@ CFLAGS=		-g\
 		-Wuninitialized -Wunused-variable -Wreturn-type -Wimplicit\
 		-I$ROOT/Linux/386/include\
 		-I$ROOT/include\
+		-fcommon\
 		-DLINUX_386
 
 ANSICPP=
 LD=		cc -m32
-LDFLAGS=
+LDFLAGS=	-fcommon
 
 SYSLIBS=
 
