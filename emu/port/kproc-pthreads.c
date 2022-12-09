@@ -12,7 +12,7 @@
 #include	<errno.h>
 #include	<semaphore.h>
 
-#if defined(__NetBSD__) || defined(LINUX_ARM)
+#if defined(__NetBSD__) || defined(LINUX_ARM) || defined(LINUX_386)
 #include	<sched.h>
 #define pthread_yield() (sched_yield())
 #endif

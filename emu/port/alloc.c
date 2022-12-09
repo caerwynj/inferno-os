@@ -374,8 +374,11 @@ dopoolalloc(Pool *p, ulong asize, ulong pc)
 	}
 
 	p->nbrk++;
-	/* t = (Bhdr *)sbrk(alloc); doesn't work on Alpine Linux */
+#if defined(LINUX_386) || defined(LINUX_ARM) || defined(LINUX_AMD64) || defined(LINUX_ARM64)
 	t = (Bhdr *) mmap(0, alloc, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+#else
+	t = (Bhdr *)sbrk(alloc); /*doesn't work on Alpine Linux */
+#endif
 	if(t == (void*)-1) {
 		p->nbrk--;
 		unlock(&p->l);

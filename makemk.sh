@@ -8,9 +8,9 @@
 
 # change these defines as appropriate here or in mkconfig
 # ROOT should be the root of the Inferno tree
-ROOT=/usr/inferno-os
+ROOT=/usr/inferno
 SYSTARG=Linux
-OBJTYPE=arm
+OBJTYPE=$objtype
 SYSTYPE=posix
 
 # if you have already changed mkconfig from the distribution, we'll use the definitions from that
