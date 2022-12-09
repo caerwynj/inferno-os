@@ -1,24 +1,11 @@
 #include "lib9.h"
 #include "mathi.h"
-#include "fenv.h"
 
 void
 FPinit(void)
 {
 	setfsr(0);	/* Clear pending exceptions */
 	setfcr(FPPDBL|FPRNR|FPINVAL|FPZDIV|FPUNFL|FPOVFL);
-}
-
-void
-FPsave(void* envp)
-{
-	fegetenv((fenv_t*) envp);
-}
-
-void
-FPrestore(void* envp)
-{
-	fesetenv((fenv_t*) envp);
 }
 
 ulong

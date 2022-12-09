@@ -29,7 +29,7 @@ umult:
 /*
  *  void		FPsave(void*);
  */
-
+/*
         .align  2
         .global FPsave
         .type   FPsave, %function
@@ -43,10 +43,12 @@ FPsave:
         str     r0, [fp, #-16]
         ldmea   fp, {fp, sp, pc}
         .size   FPsave, .-FPsave
-
+*/
 /*
  * void		FPrestore(void*);
  */
+
+/*
         .align  2
         .global FPrestore
         .type   FPrestore, %function
@@ -60,3 +62,4 @@ FPrestore:
         str     r0, [fp, #-16]
         ldmea   fp, {fp, sp, pc}
         .size   FPrestore, .-FPrestore
+*/

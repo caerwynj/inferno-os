@@ -60,7 +60,7 @@ y.debug
 
 # preserve the patterns from .hgignore, though perhaps all binaries
 # should be deleted and ignored with:
-# /[A-Z]*/*/bin/
+/[A-Z]*/*/bin/
 
 /[A-Z]*/*/bin/?[acl]
 /[A-Z]*/*/bin/5coff
@@ -94,4 +94,6 @@ y.debug
 /Nt/*/bin/sqz.exe
 /Nt/*/bin/srclist.exe
 /Nt/*/bin/styxtest.exe
+
+/services/httpd/root
 
