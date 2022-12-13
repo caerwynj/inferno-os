@@ -101,7 +101,7 @@ rootopen(Chan *c, int omode)
  * sysremove() knows this is a nop
  */
 static void	 
-rootclose(Chan*)
+rootclose(Chan* c)
 {
 }
 
@@ -125,7 +125,7 @@ rootread(Chan *c, void *buf, long n, vlong offset)
 }
 
 static long	 
-rootwrite(Chan*, void*, long, vlong)
+rootwrite(Chan* c, void* v, long l, vlong vl)
 {
 	error(Eperm);
 	return 0;

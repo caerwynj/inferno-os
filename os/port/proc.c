@@ -10,14 +10,14 @@ Ref	pidalloc;
 
 struct
 {
-	Lock;
+	Lock l;
 	Proc*	arena;
 	Proc*	free;
 }procalloc;
 
 typedef struct
 {
-	Lock;
+	Lock l;
 	Proc*	head;
 	Proc*	tail;
 }Schedq;
@@ -72,7 +72,7 @@ schedinit(void)		/* never returns */
 			 */
 			up->qnext = procalloc.free;
 			procalloc.free = up;
-			unlock(&procalloc);
+			unlock(&procalloc.l);
 			break;
 		}
 		up->mach = nil;
@@ -115,7 +115,7 @@ ready(Proc *p)
 	}
 */
 	rq = &runq[p->pri];
-	lock(runq);
+	lock(&runq->l);
 	p->rnext = 0;
 	if(rq->tail)
 		rq->tail->rnext = p;
@@ -126,7 +126,7 @@ ready(Proc *p)
 	nrdy++;
 	occupied |= 1<<p->pri;
 	p->state = Ready;
-	unlock(runq);
+	unlock(&runq->l);
 	splx(s);
 }
 
@@ -173,7 +173,7 @@ loop:
 			goto loop;
 		}
 
-	if(!canlock(runq))
+	if(!canlock(&runq->l))
 		goto loop;
 	/* choose first one we last ran on this processor at this level or hasn't moved recently */
 	l = nil;
@@ -184,7 +184,7 @@ loop:
 		p = rq->head;
 	/* p->mach==0 only when process state is saved */
 	if(p == 0 || p->mach) {
-		unlock(runq);
+		unlock(&runq->l);
 		goto loop;
 	}
 	if(p->rnext == nil)
@@ -200,12 +200,12 @@ loop:
 	nrdy--;
 	if(p->dbgstop){
 		p->state = Stopped;
-		unlock(runq);
+		unlock(&runq->l);
 		goto loop;
 	}
 	if(p->state != Ready)
 		print("runproc %s %lud %s\n", p->text, p->pid, statename[p->state]);
-	unlock(runq);
+	unlock(&runq->l);
 	p->state = Scheding;
 	if(p->mp != MACHP(m->machno))
 		p->movetime = MACHP(0)->ticks + HZ/10;
@@ -238,17 +238,17 @@ newproc(void)
 {
 	Proc *p;
 
-	lock(&procalloc);
+	lock(&procalloc.l);
 	for(;;) {
 		if(p = procalloc.free)
 			break;
 
-		unlock(&procalloc);
+		unlock(&procalloc.l);
 		resrcwait("no procs");
-		lock(&procalloc);
+		lock(&procalloc.l);
 	}
 	procalloc.free = p->qnext;
-	unlock(&procalloc);
+	unlock(&procalloc.l);
 
 	p->type = Unknown;
 	p->state = Scheding;
@@ -312,13 +312,13 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 	s = splhi();
 
 	lock(&up->rlock);
-	lock(r);
+	lock(&r->l);
 
 	/*
 	 * if killed or condition happened, never mind
 	 */
 	if(up->killed || f(arg)){
-		unlock(r);
+		unlock(&r->l);
 	}else{
 
 		/*
@@ -332,7 +332,7 @@ sleep(Rendez *r, int (*f)(void*), void *arg)
 		}
 		up->state = Wakeme;
 		r->p = up;
-		unlock(r);
+		unlock(&r->l);
 		up->swipend = 0;
 		up->r = r;	/* for swiproc */
 		unlock(&up->rlock);
@@ -371,7 +371,7 @@ tsleep(Rendez *r, int (*fn)(void*), void *arg, int ms)
 		panic("tsleep() not in process (0x%lux)", getcallerpc(&r));
 
 	when = MS2TK(ms)+MACHP(0)->ticks;
-	lock(&talarm);
+	lock(&talarm.l);
 	/* take out of list if checkalarm didn't */
 	if(up->trend) {
 		l = &talarm.list;
@@ -395,7 +395,7 @@ tsleep(Rendez *r, int (*fn)(void*), void *arg, int ms)
 	up->tfn = fn;
 	up->tlink = *l;
 	*l = up;
-	unlock(&talarm);
+	unlock(&talarm.l);
 
 	if(waserror()){
 		up->twhen = 0;
@@ -413,7 +413,7 @@ wakeup(Rendez *r)
 	int s;
 
 	s = splhi();
-	lock(r);
+	lock(&r->l);
 	p = r->p;
 	if(p){
 		r->p = nil;
@@ -421,7 +421,7 @@ wakeup(Rendez *r)
 			panic("wakeup: state");
 		ready(p);
 	}
-	unlock(r);
+	unlock(&r->l);
 	splx(s);
 	return p != nil;
 }
@@ -441,13 +441,13 @@ swiproc(Proc *p, int interp)
 		p->killed = 1;
 	r = p->r;
 	if(r != nil) {
-		lock(r);
+		lock(&r->l);
 		if(r->p == p){
 			p->swipend = 1;
 			r->p = nil;
 			ready(p);
 		}
-		unlock(r);
+		unlock(&r->l);
 	}
 	unlock(&p->rlock);
 	splx(s);
@@ -462,7 +462,7 @@ notkilled(void)
 }
 
 void
-pexit(char*, int)
+pexit(char* s, int n)
 {
 	Osenv *o;
 
@@ -477,7 +477,7 @@ pexit(char*, int)
 	}
 
 	/* Sched must not loop for this lock */
-	lock(&procalloc);
+	lock(&procalloc.l);
 
 /*
 	edfstop(up);
@@ -537,18 +537,18 @@ kproc(char *name, void (*func)(void *), void *arg, int flags)
 	kstrdup(&p->env->user, up->env->user);
 	if(flags & KPDUPPG) {
 		pg = up->env->pgrp;
-		incref(pg);
+		incref(&pg->r);
 		p->env->pgrp = pg;
 	}
 	if(flags & KPDUPFDG) {
 		fg = up->env->fgrp;
-		incref(fg);
+		incref(&fg->r);
 		p->env->fgrp = fg;
 	}
 	if(flags & KPDUPENVG) {
 		eg = up->env->egrp;
 		if(eg != nil)
-			incref(eg);
+			incref(&eg->r);
 		p->env->egrp = eg;
 	}
 
@@ -691,7 +691,7 @@ renameuser(char *old, char *new)
 }
 
 int
-return0(void*)
+return0(void* v)
 {
 	return 0;
 }

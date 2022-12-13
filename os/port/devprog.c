@@ -154,7 +154,7 @@ extern	Module*	modules;
 static  char 	Emisalign[] = "misaligned address";
 
 static int
-proggen(Chan *c, char *name, Dirtab *tab, int, int s, Dir *dp)
+proggen(Chan *c, char *name, Dirtab *tab, int zi, int s, Dir *dp)
 {
 	Qid qid;
 	Prog *p;

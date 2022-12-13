@@ -40,6 +40,7 @@ atol(char *s)
 	return n;
 }
 
+int
 atoi(char *s)
 {
 

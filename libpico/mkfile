@@ -1,0 +1,6 @@
+<../mkconfig
+
+PICOROOT=$HOME/github/pico-labs
+install:
+	cp $PICOROOT/lib/libpico.a $ROOT/Pico/arm/lib/libpico.a
+

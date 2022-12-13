@@ -61,7 +61,7 @@ struct Ref
 
 struct Rendez
 {
-	Lock;
+	Lock l;
 	Proc	*p;
 };
 
@@ -111,7 +111,7 @@ struct QLock
 
 struct RWlock
 {
-	Lock;				/* Lock modify lock */
+	Lock l;				/* Lock modify lock */
 	QLock	x;			/* Mutual exclusion lock */
 	QLock	k;			/* Lock for waiting writers */
 	int	readers;		/* Count of readers in lock */
@@ -119,13 +119,13 @@ struct RWlock
 
 struct Talarm
 {
-	Lock;
+	Lock l;
 	Proc*	list;
 };
 
 struct Alarms
 {
-	QLock;
+	QLock qlock;
 	Proc*	head;
 };
 
@@ -185,8 +185,8 @@ struct Block
 
 struct Chan
 {
-	Lock;
-	Ref;
+	Lock l;
+	Ref r;
 	Chan*	next;			/* allocation */
 	Chan*	link;
 	vlong	offset;			/* in file */
@@ -216,7 +216,7 @@ struct Chan
 
 struct Cname
 {
-	Ref;
+	Ref r;
 	int	alen;			/* allocated length */
 	int	len;			/* strlen(s) */
 	char	*s;
@@ -290,7 +290,7 @@ struct Mount
 
 struct Mhead
 {
-	Ref;
+	Ref r;
 	RWlock	lock;
 	Chan*	from;			/* channel mounted upon */
 	Mount*	mount;			/* what's mounted upon it */
@@ -299,7 +299,7 @@ struct Mhead
 
 struct Mnt
 {
-	Lock;
+	Lock l;
 	/* references are counted using c->ref; channels on this mount point incref(c->mchan) == Mnt.c */
 	Chan	*c;		/* Channel to file service */
 	Proc	*rip;		/* Reader in progress */
@@ -333,7 +333,7 @@ struct Mntparam {
 
 struct Pgrp
 {
-	Ref;				/* also used as a lock when mounting */
+	Ref r;				/* also used as a lock when mounting */
 	ulong	pgrpid;
 	QLock	debug;			/* single access via devproc.c */
 	RWlock	ns;			/* Namespace n read/one write lock */
@@ -348,8 +348,8 @@ struct Pgrp
 
 struct Fgrp
 {
-	Lock;
-	Ref;
+	Lock l;
+	Ref r;
 	Chan**	fd;
 	int	nfd;			/* number of fd slots */
 	int	maxfd;			/* highest fd in use */
@@ -367,8 +367,8 @@ struct Evalue
 
 struct Egrp
 {
-	Ref;
-	QLock;
+	Ref r;
+	QLock l;
 	Evalue	*entries;
 	ulong	path;	/* qid.path of next Evalue to be allocated */
 	ulong	vers;	/* of Egrp */
@@ -376,7 +376,7 @@ struct Egrp
 
 struct Signerkey
 {
-	Ref;
+	Ref r;
 	char*	owner;
 	ushort	footprint;
 	ulong	expires;
@@ -387,8 +387,8 @@ struct Signerkey
 
 struct Skeyset
 {
-	Ref;
-	QLock;
+	Ref r;
+	QLock l;
 	ulong	flags;
 	char*	devs;
 	int	nkey;
@@ -413,7 +413,7 @@ struct Timer
 	void	(*tf)(Ureg*, Timer*);
 	void	*ta;
 	/* Internal */
-	Lock;
+	Lock l;
 	Timers	*tt;		/* Timers queue this timer runs on */
 	vlong	twhen;		/* ns represented in fastticks */
 	Timer	*tnext;
@@ -571,7 +571,7 @@ extern	Talarm	talarm;
  *  action log
  */
 struct Log {
-	Lock;
+	Lock l;
 	int	opens;
 	char*	buf;
 	char	*end;

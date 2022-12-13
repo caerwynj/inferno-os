@@ -24,13 +24,13 @@ int	iprintscreenputs;
 
 static struct
 {
-	RWlock;
+	RWlock l;
 	Queue*	q;
 } kprintq;
 
 static struct
 {
-	QLock;
+	QLock l;
 
 	int	raw;		/* true if we shouldn't process input */
 	int	ctl;		/* number of opens to the control file */
@@ -126,10 +126,10 @@ putstrn0(char *str, int n, int usewrite)
 	 *  put the message there.
 	 */
 	m = consoleprint;
-	if(canrlock(&kprintq)){
+	if(canrlock(&kprintq.l)){
 		if(kprintq.q != nil){
 			if(waserror()){
-				runlock(&kprintq);
+				runlock(&kprintq.l);
 				nexterror();
 			}
 			if(usewrite)
@@ -139,7 +139,7 @@ putstrn0(char *str, int n, int usewrite)
 			poperror();
 			m = 0;
 		}
-		runlock(&kprintq);
+		runlock(&kprintq.l);
 	}
 	if(m && screenputs != nil)
 		screenputs(str, n);
@@ -351,9 +351,9 @@ pprint(char *fmt, ...)
 	devtab[c->type]->write(c, buf, n, c->offset);
 	poperror();
 
-	lock(c);
+	lock(&c->l);
 	c->offset += n;
-	unlock(c);
+	unlock(&c->l);
 
 	return n;
 }
@@ -391,7 +391,7 @@ typedef struct {
 } Dbgkey;
 
 static struct {
-	Rendez;
+	Rendez r;
 	Dbgkey	*work;
 	Dbgkey	keys[50];
 	int	nkeys;
@@ -411,20 +411,20 @@ finddbgkey(Rune r)
 }
 
 static int
-dbgwork(void *)
+dbgwork(void * p)
 {
 	return dbg.work != 0;
 }
 
 static void
-dbgproc(void *)
+dbgproc(void * p)
 {
 	Dbgkey *dp;
 
 	setpri(PriRealtime);
 	for(;;) {
 		do {
-			sleep(&dbg, dbgwork, 0);
+			sleep(&dbg.r, dbgwork, 0);
 			dp = dbg.work;
 		} while(dp == nil);
 		dp->f(dp->r);
@@ -473,7 +473,7 @@ isdbgkey(Rune r)
 				dp->f(r);
 			else {
 				dbg.work = dp;
-				wakeup(&dbg);
+				wakeup(&dbg.r);
 			}
 			ctrlt = 0;
 			return 1;
@@ -499,7 +499,7 @@ isdbgkey(Rune r)
 }
 
 static void
-dbgtoggle(Rune)
+dbgtoggle(Rune r)
 {
 	dbg.on = !dbg.on;
 	print("Debug keys %s\n", dbg.on ? "HOT" : "COLD");
@@ -731,13 +731,13 @@ fddump()
 }
 
 static void
-qpanic(Rune)
+qpanic(Rune r)
 {
 	panic("User requested panic.");
 }
 
 static void
-rexit(Rune)
+rexit(Rune r)
 {
 	exit(0);
 }
@@ -788,25 +788,25 @@ consopen(Chan *c, int omode)
 	case Qconsctl:
 		if(!iseve())
 			error(Eperm);
-		qlock(&kbd);
+		qlock(&kbd.l);
 		kbd.ctl++;
-		qunlock(&kbd);
+		qunlock(&kbd.l);
 		break;
 
 	case Qkeyboard:
 		if((omode & 3) != OWRITE) {
-			qlock(&kbd);
+			qlock(&kbd.l);
 			kbd.kbdr++;
 			flushkbdline(kbdq);
 			kbd.raw = 1;
-			qunlock(&kbd);
+			qunlock(&kbd.l);
 		}
 		break;
 
 	case Qscancode:
-		qlock(&kbd);
+		qlock(&kbd.l);
 		if(kscanq || !kscanid) {
-			qunlock(&kbd);
+			qunlock(&kbd.l);
 			c->flag &= ~COPEN;
 			if(kscanq)
 				error(Einuse);
@@ -814,23 +814,23 @@ consopen(Chan *c, int omode)
 				error(Ebadarg);
 		}
 		kscanq = qopen(256, 0, nil, nil);
-		qunlock(&kbd);
+		qunlock(&kbd.l);
 		break;
 
 	case Qkprint:
 		if((omode & 3) != OWRITE) {
-			wlock(&kprintq);
+			wlock(&kprintq.l);
 			if(kprintq.q != nil){
-				wunlock(&kprintq);
+				wunlock(&kprintq.l);
 				error(Einuse);
 			}
 			kprintq.q = qopen(32*1024, Qcoalesce, nil, nil);
 			if(kprintq.q == nil){
-				wunlock(&kprintq);
+				wunlock(&kprintq.l);
 				error(Enomem);
 			}
 			qnoblock(kprintq.q, 1);
-			wunlock(&kprintq);
+			wunlock(&kprintq.l);
 			c->iounit = qiomaxatomic;
 		}
 		break;
@@ -847,34 +847,34 @@ consclose(Chan *c)
 	switch((ulong)c->qid.path){
 	case Qconsctl:
 		/* last close of control file turns off raw */
-		qlock(&kbd);
+		qlock(&kbd.l);
 		if(--kbd.ctl == 0)
 			kbd.raw = 0;
-		qunlock(&kbd);
+		qunlock(&kbd.l);
 		break;
 
 	case Qkeyboard:
 		if(c->mode != OWRITE) {
-			qlock(&kbd);
+			qlock(&kbd.l);
 			--kbd.kbdr;
-			qunlock(&kbd);
+			qunlock(&kbd.l);
 		}
 		break;
 
 	case Qscancode:
-		qlock(&kbd);
+		qlock(&kbd.l);
 		if(kscanq) {
 			qfree(kscanq);
 			kscanq = 0;
 		}
-		qunlock(&kbd);
+		qunlock(&kbd.l);
 		break;
 
 	case Qkprint:
-		wlock(&kprintq);
+		wlock(&kprintq.l);
 		qfree(kprintq.q);
 		kprintq.q = nil;
-		wunlock(&kprintq);
+		wunlock(&kprintq.l);
 		break;
 	}
 }
@@ -898,9 +898,9 @@ consread(Chan *c, void *buf, long n, vlong offset)
 		return readstr(offset, buf, n, VERSION);
 	case Qcons:
 	case Qkeyboard:
-		qlock(&kbd);
+		qlock(&kbd.l);
 		if(waserror()) {
-			qunlock(&kbd);
+			qunlock(&kbd.l);
 			nexterror();
 		}
 		if(kbd.raw || kbd.kbdr) {
@@ -944,7 +944,7 @@ consread(Chan *c, void *buf, long n, vlong offset)
 			}
 			n = qread(lineq, buf, n);
 		}
-		qunlock(&kbd);
+		qunlock(&kbd.l);
 		poperror();
 		return n;
 
@@ -1009,14 +1009,14 @@ consread(Chan *c, void *buf, long n, vlong offset)
 		return qread(klogq, buf, n);
 
 	case Qkprint:
-		rlock(&kprintq);
+		rlock(&kprintq.l);
 		if(waserror()){
-			runlock(&kprintq);
+			runlock(&kprintq.l);
 			nexterror();
 		}
 		n = qread(kprintq.q, buf, n);
 		poperror();
-		runlock(&kprintq);
+		runlock(&kprintq.l);
 		return n;
 
 	default:
@@ -1061,15 +1061,15 @@ conswrite(Chan *c, void *va, long n, vlong offset)
 		buf[n] = 0;
 		for(a = buf; a;){
 			if(strncmp(a, "rawon", 5) == 0){
-				qlock(&kbd);
+				qlock(&kbd.l);
 				flushkbdline(kbdq);
 				kbd.raw = 1;
-				qunlock(&kbd);
+				qunlock(&kbd.l);
 			} else if(strncmp(a, "rawoff", 6) == 0){
-				qlock(&kbd);
+				qlock(&kbd.l);
 				kbd.raw = 0;
 				kbd.x = 0;
-				qunlock(&kbd);
+				qunlock(&kbd.l);
 			}
 			if(a = strchr(a, ' '))
 				a++;

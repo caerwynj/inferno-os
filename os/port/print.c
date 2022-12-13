@@ -19,13 +19,13 @@ _fmtunlock(void)
 }
 
 int
-_efgfmt(Fmt*)
+_efgfmt(Fmt* f)
 {
 	return -1;
 }
 
 int
-errfmt(Fmt*)
+errfmt(Fmt* f)
 {
 	return -1;
 }

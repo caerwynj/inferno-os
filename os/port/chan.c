@@ -24,7 +24,7 @@ enum
 
 struct
 {
-	Lock;
+	Lock l;
 	int	fid;
 	Chan	*free;
 	Chan	*list;
@@ -177,26 +177,26 @@ newchan(void)
 {
 	Chan *c;
 
-	lock(&chanalloc);
+	lock(&chanalloc.l);
 	c = chanalloc.free;
 	if(c != 0)
 		chanalloc.free = c->next;
-	unlock(&chanalloc);
+	unlock(&chanalloc.l);
 
 	if(c == nil) {
 		c = smalloc(sizeof(Chan));
-		lock(&chanalloc);
+		lock(&chanalloc.l);
 		c->fid = ++chanalloc.fid;
 		c->link = chanalloc.list;
 		chanalloc.list = c;
-		unlock(&chanalloc);
+		unlock(&chanalloc.l);
 	}
 
 	/* if you get an error before associating with a dev,
 	   close calls rootclose, a nop */
 	c->type = 0;
 	c->flag = 0;
-	c->ref = 1;
+	c->r.ref = 1;
 	c->dev = 0;
 	c->offset = 0;
 	c->iounit = 0;
@@ -228,7 +228,7 @@ newcname(char *s)
 	n->alen = i+CNAMESLOP;
 	n->s = smalloc(n->alen);
 	memmove(n->s, s, i+1);
-	n->ref = 1;
+	n->r.ref = 1;
 	incref(&ncname);
 	return n;
 }
@@ -238,7 +238,7 @@ cnameclose(Cname *n)
 {
 	if(n == nil)
 		return;
-	if(decref(n))
+	if(decref(&n->r))
 		return;
 	decref(&ncname);
 	free(n->s);
@@ -255,7 +255,7 @@ addelem(Cname *n, char *s)
 	if(s[0]=='.' && s[1]=='\0')
 		return n;
 
-	if(n->ref > 1){
+	if(n->r.ref > 1){
 		/* copy on write */
 		new = newcname(n->s);
 		cnameclose(n);
@@ -304,10 +304,10 @@ chanfree(Chan *c)
 
 	cnameclose(c->name);
 
-	lock(&chanalloc);
+	lock(&chanalloc.l);
 	c->next = chanalloc.free;
 	chanalloc.free = c;
-	unlock(&chanalloc);
+	unlock(&chanalloc.l);
 }
 
 void
@@ -319,7 +319,7 @@ cclose(Chan *c)
 	if(c->flag&CFREE)
 		panic("cclose %lux", getcallerpc(&c));
 
-	if(decref(c))
+	if(decref(&c->r))
 		return;
 
 	if(!waserror()){
@@ -337,7 +337,7 @@ cunique(Chan *c)
 {
 	Chan *nc;
 
-	if(c->ref != 1) {
+	if(c->r.ref != 1) {
 		nc = cclone(c);
 		cclose(c);
 		c = nc;
@@ -386,9 +386,9 @@ newmhead(Chan *from)
 	Mhead *mh;
 
 	mh = smalloc(sizeof(Mhead));
-	mh->ref = 1;
+	mh->r.ref = 1;
 	mh->from = from;
-	incref(from);
+	incref(&from->r);
 
 /*
 	n = from->name->len;
@@ -601,7 +601,7 @@ cclone(Chan *c)
 	free(wq);
 	nc->name = c->name;
 	if(c->name)
-		incref(c->name);
+		incref(&c->name->r);
 	return nc;
 }
 
@@ -623,14 +623,14 @@ if(m->from == nil){
 		if(eqchantdqid(m->from, type, dev, qid, 1)) {
 			runlock(&pg->ns);
 			if(mp != nil){
-				incref(m);
+				incref(&m->r);
 				if(*mp != nil)
 					putmhead(*mp);
 				*mp = m;
 			}
 			if(*cp != nil)
 				cclose(*cp);
-			incref(m->mount->to);
+			incref(&m->mount->to->r);
 			*cp = m->mount->to;
 			runlock(&m->lock);
 			return 1;
@@ -679,7 +679,7 @@ undomount(Chan *c, Cname *name)
 					if(strcmp(t->head->from->name->s, name->s) != 0)
 						continue;
 					nc = t->head->from;
-					incref(nc);
+					incref(&nc->r);
 					cclose(c);
 					c = nc;
 					break;
@@ -708,9 +708,9 @@ walk(Chan **cp, char **names, int nnames, int nomount, int *nerror)
 	Walkqid *wq;
 
 	c = *cp;
-	incref(c);
+	incref(&c->r);
 	cname = c->name;
-	incref(cname);
+	incref(&cname->r);
 	mh = nil;
 
 	/*
@@ -1024,7 +1024,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 	switch(name[0]){
 	case '/':
 		c = up->env->pgrp->slash;
-		incref(c);
+		incref(&c->r);
 		break;
 	
 	case '#':
@@ -1059,7 +1059,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 
 	default:
 		c = up->env->pgrp->dot;
-		incref(c);
+		incref(&c->r);
 		break;
 	}
 	prefix = name - aname;
@@ -1146,7 +1146,7 @@ namec(char *aname, int amode, int omode, ulong perm)
 	Open:
 		/* save the name; domount might change c */
 		cname = c->name;
-		incref(cname);
+		incref(&cname->r);
 		m = nil;
 		if(!nomount)
 			domount(&c, &m);
@@ -1271,7 +1271,7 @@ if(c->umh != nil){
 				cnew = createdir(cnew, m);
 			else{
 				cnew = c;
-				incref(cnew);
+				incref(&cnew->r);
 			}
 
 			/*
@@ -1283,7 +1283,7 @@ if(c->umh != nil){
 			cnew = cunique(cnew);
 			cnameclose(cnew->name);
 			cnew->name = c->name;
-			incref(cnew->name);
+			incref(&cnew->name->r);
 
 			devtab[cnew->type]->create(cnew, e.elems[e.nelems-1], omode&~(OEXCL|OCEXEC), perm);
 			poperror();
@@ -1424,7 +1424,7 @@ isdir(Chan *c)
 void
 putmhead(Mhead *m)
 {
-	if(m && decref(m) == 0){
+	if(m && decref(&m->r) == 0){
 		m->mount = (Mount*)0xCafeBeef;
 		free(m);
 	}

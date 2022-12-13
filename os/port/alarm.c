@@ -17,7 +17,7 @@ checkalarms(void)
 
 	now = MACHP(0)->ticks;
 
-	if(talarm.list == 0 || canlock(&talarm) == 0)
+	if(talarm.list == 0 || canlock(&talarm.l) == 0)
 		return;
 
 	for(;;) {
@@ -37,5 +37,5 @@ checkalarms(void)
 		p->trend = 0;
 	}
 
-	unlock(&talarm);
+	unlock(&talarm.l);
 }

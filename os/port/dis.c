@@ -202,12 +202,12 @@ newprog(Prog *p, Modlink *m)
 	on->waitq = op->childq;
 	on->childq = nil;
 	on->debug = nil;
-	incref(on->pgrp);
-	incref(on->fgrp);
+	incref(&on->pgrp->r);
+	incref(&on->fgrp->r);
 	if(on->egrp != nil)
-		incref(on->egrp);
+		incref(&on->egrp->r);
 	if(on->sigs != nil)
-		incref(on->sigs);
+		incref(&on->sigs->r);
 	on->user = nil;
 	kstrdup(&on->user, op->user);
 	on->errstr = on->errbuf0;
@@ -1009,7 +1009,7 @@ disfault(void *reg, char *msg)
 }
 
 void
-vmachine(void*)
+vmachine(void* junk)
 {
 	Prog *r;
 	Osenv *o;
@@ -1106,12 +1106,12 @@ disinit(void *a)
 
 	memmove(p->osenv, up->env, sizeof(Osenv));
 	o = p->osenv;
-	incref(o->pgrp);
-	incref(o->fgrp);
+	incref(&o->pgrp->r);
+	incref(&o->fgrp->r);
 	if(o->egrp != nil)
-		incref(o->egrp);
+		incref(&o->egrp->r);
 	if(o->sigs != nil)
-		incref(o->sigs);
+		incref(&o->sigs->r);
 	o->user = nil;
 	kstrdup(&o->user, up->env->user);
 	o->errstr = o->errbuf0;

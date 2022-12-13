@@ -13,7 +13,7 @@
 typedef struct Pipe	Pipe;
 struct Pipe
 {
-	QLock;
+	QLock l;
 	Pipe*	next;
 	int	ref;
 	ulong	path;
@@ -25,7 +25,7 @@ struct Pipe
 
 static struct
 {
-	Lock;
+	Lock l;
 	ulong	path;
 	int	pipeqsize;	
 } pipealloc;
@@ -95,9 +95,9 @@ pipeattach(char *spec)
 		error(Enomem);
 	poperror();
 
-	lock(&pipealloc);
+	lock(&pipealloc.l);
 	p->path = ++pipealloc.path;
-	unlock(&pipealloc);
+	unlock(&pipealloc.l);
 
 	c->qid.path = NETQID(2*p->path, Qdir);
 	c->qid.vers = 0;
@@ -108,7 +108,7 @@ pipeattach(char *spec)
 }
 
 static int
-pipegen(Chan *c, char *, Dirtab *tab, int ntab, int i, Dir *dp)
+pipegen(Chan *c, char *zc, Dirtab *tab, int ntab, int i, Dir *dp)
 {
 	int id, len;
 	Qid qid;
@@ -152,7 +152,7 @@ pipewalk(Chan *c, Chan *nc, char **name, int nname)
 	p = c->aux;
 	wq = devwalk(c, nc, name, nname, p->pipedir, nelem(pipedir), pipegen);
 	if(wq != nil && wq->clone != nil && wq->clone != c){
-		qlock(p);
+		qlock(&p->l);
 		p->ref++;
 		if(c->flag & COPEN){
 			switch(NETTYPE(c->qid.path)){
@@ -164,7 +164,7 @@ pipewalk(Chan *c, Chan *nc, char **name, int nname)
 				break;
 			}
 		}
-		qunlock(p);
+		qunlock(&p->l);
 	}
 	return wq;
 }
@@ -218,9 +218,9 @@ pipeopen(Chan *c, int omode)
 	openmode(omode);	/* check it */
 
 	p = c->aux;
-	qlock(p);
+	qlock(&p->l);
 	if(waserror()){
-		qunlock(p);
+		qunlock(&p->l);
 		nexterror();
 	}
 	switch(NETTYPE(c->qid.path)){
@@ -234,7 +234,7 @@ pipeopen(Chan *c, int omode)
 		break;
 	}
 	poperror();
-	qunlock(p);
+	qunlock(&p->l);
 
 	c->mode = openmode(omode);
 	c->flag |= COPEN;
@@ -249,7 +249,7 @@ pipeclose(Chan *c)
 	Pipe *p;
 
 	p = c->aux;
-	qlock(p);
+	qlock(&p->l);
 
 	if(c->flag & COPEN){
 		/*
@@ -287,14 +287,14 @@ pipeclose(Chan *c)
 	 */
 	p->ref--;
 	if(p->ref == 0){
-		qunlock(p);
+		qunlock(&p->l);
 		freepipe(p);
 	} else
-		qunlock(p);
+		qunlock(&p->l);
 }
 
 static long
-piperead(Chan *c, void *va, long n, vlong)
+piperead(Chan *c, void *va, long n, vlong vl)
 {
 	Pipe *p;
 
@@ -335,7 +335,7 @@ pipebread(Chan *c, long n, ulong offset)
  *  the prog.
  */
 static long
-pipewrite(Chan *c, void *va, long n, vlong)
+pipewrite(Chan *c, void *va, long n, vlong vl)
 {
 	Pipe *p;
 	Prog *r;

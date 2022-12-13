@@ -1,3 +1,4 @@
+int
 toupper(int c)
 {
 
@@ -6,6 +7,7 @@ toupper(int c)
 	return (c-'a'+'A');
 }
 
+int
 tolower(int c)
 {
 

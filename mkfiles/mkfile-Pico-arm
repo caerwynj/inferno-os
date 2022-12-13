@@ -1,0 +1,32 @@
+TARGMODEL=	Posix
+TARGSHTYPE=	sh
+CPUS=		arm
+
+O=		o
+OS=		o
+
+AR=		ar
+ARFLAGS=	ruvs
+
+AS=		arm-none-eabi-gcc -c 
+ASFLAGS=
+
+CC=		arm-none-eabi-gcc -c 
+CFLAGS=		-g\
+		-fno-builtin\
+		-Wuninitialized -Wunused-variable -Wreturn-type\
+		-Wimplicit -Wbuiltin-declaration-mismatch\
+		-I$ROOT/Pico/arm/include\
+		-I$ROOT/include\
+		-DLINUX_ARM\
+		-fcommon\
+		-mcpu=cortex-m0plus -mthumb -Og
+
+ANSICPP=
+LD=		arm-none-eabi-g++  
+LDFLAGS=	-fcommon \
+
+SYSLIBS=	
+
+YACC=		iyacc
+YFLAGS=		-d

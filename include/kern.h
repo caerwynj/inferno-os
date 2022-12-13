@@ -1,5 +1,8 @@
 typedef unsigned long size_t;
 
+#define USED(x)	if(x){}else{}
+#define	SET(x)
+
 #define	nelem(x)	(sizeof(x)/sizeof((x)[0]))
 #define	offsetof(s, m)	(ulong)(&(((s*)0)->m))
 #define	assert(x)	if(x){}else _assert("x")
@@ -344,7 +347,7 @@ extern	int	enc16(char*, int, uchar*, int);
 extern	int	encodefmt(Fmt*);
 extern	void	exits(char*);
 extern	double	frexp(double, int*);
-extern	uintptr	getcallerpc(void*);
+/*extern	uintptr	getcallerpc(void*);*/
 extern	char*	getenv(char*);
 extern	int	getfields(char*, char**, int, int, char*);
 extern	char*	getuser(void);
@@ -363,10 +366,10 @@ extern	double	ipow10(int);
 extern	int	putenv(char*, char*);
 extern	void	qsort(void*, long, long, int (*)(void*, void*));
 /*extern	int	setjmp(jmp_buf);*/
-extern	double	strtod(char*, char**);
+extern	double	strtod(const char*, char**);
 extern	long	strtol(char*, char**, int);
 extern	ulong	strtoul(char*, char**, int);
-extern	vlong	strtoll(char*, char**, int);
+extern	vlong	strtoll(const char*, char**, int);
 extern	uvlong	strtoull(char*, char**, int);
 extern	void	sysfatal(char*, ...);
 #pragma	varargck	argpos	sysfatal	1

@@ -53,7 +53,7 @@ devdir(Chan *c, Qid qid, char *n, vlong length, char *user, long perm, Dir *db)
  * the zeroth element of the table MUST be the directory itself for ..
 */
 int
-devgen(Chan *c, char*, Dirtab *tab, int ntab, int i, Dir *dp)
+devgen(Chan *c, char* jun, Dirtab *tab, int ntab, int i, Dir *dp)
 {
 	if(tab == 0)
 		return -1;
@@ -265,12 +265,12 @@ devdirread(Chan *c, char *d, long n, Dirtab *tab, int ntab, Devgen *gen)
 {
 	long m, dsz;
 	struct{
-		Dir;
+		Dir d;
 		char slop[100];
 	}dir;
 
 	for(m=0; m<n; c->dri++) {
-		switch((*gen)(c, nil, tab, ntab, c->dri, &dir)){
+		switch((*gen)(c, nil, tab, ntab, c->dri, &dir.d)){
 		case -1:
 			return m;
 
@@ -278,7 +278,7 @@ devdirread(Chan *c, char *d, long n, Dirtab *tab, int ntab, Devgen *gen)
 			break;
 
 		case 1:
-			dsz = convD2M(&dir, (uchar*)d, n-m);
+			dsz = convD2M(&dir.d, (uchar*)d, n-m);
 			if(dsz <= BIT16SZ){	/* <= not < because this isn't stat; read is stuck */
 				if(m == 0)
 					error(Eshort);
@@ -345,7 +345,7 @@ Return:
 }
 
 void
-devcreate(Chan*, char*, int, ulong)
+devcreate(Chan* c, char* s, int i, ulong ul)
 {
 	error(Eperm);
 }
@@ -384,26 +384,26 @@ devbwrite(Chan *c, Block *bp, ulong offset)
 }
 
 void
-devremove(Chan*)
+devremove(Chan* c)
 {
 	error(Eperm);
 }
 
 int
-devwstat(Chan*, uchar*, int)
+devwstat(Chan* c, uchar* s, int i)
 {
 	error(Eperm);
 	return 0;
 }
 
 void
-devpower(int)
+devpower(int i)
 {
 	error(Eperm);
 }
 
 int
-devconfig(int, char *, DevConf *)
+devconfig(int i, char * s, DevConf * dc)
 {
 	error(Eperm);
 	return 0;

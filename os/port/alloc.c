@@ -836,7 +836,8 @@ _auditmemloc(char *str, void *v)
 	char *fmsg, *msg;
 	ulong fsz;
 
-	SET(fsz, fmsg);
+	SET(fsz)
+	SET(fmsg);
 	for (p = &table.pool[0]; p < &table.pool[nelem(table.pool)]; p++) {
 		ilock(&p->l);
 		for (bc = p->chain; bc != nil; bc = bc->clink) {

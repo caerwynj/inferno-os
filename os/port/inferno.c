@@ -93,7 +93,7 @@ mkfd(int fd)
 	handle->fd.fd = fd;
 	fg = up->env->fgrp;
 	handle->grp = fg;
-	incref(fg);
+	incref(&fg->r);
 	return (Sys_FD*)handle;
 }
 #define fdchk(x)	((x) == (Sys_FD*)H ? -1 : (x)->fd)
@@ -825,21 +825,21 @@ Sys_pctl(void *fp)
 	if(f->flags & Sys_NEWFD) {
 		ofg = o->fgrp;
 		nfg = newfgrp(ofg);
-		lock(ofg);
+		lock(&ofg->l);
 		/* file descriptors to preserve */
 		for(l = f->movefd; l != H; l = l->tail) {
 			fd = *(int*)l->data;
 			if(fd >= 0 && fd <= ofg->maxfd) {
 				c = ofg->fd[fd];
 				if(c != nil && fd < nfg->nfd && nfg->fd[fd] == nil) {
-					incref(c);
+					incref(&c->r);
 					nfg->fd[fd] = c;
 					if(nfg->maxfd < fd)
 						nfg->maxfd = fd;
 				}
 			}
 		}
-		unlock(ofg);
+		unlock(&ofg->l);
 		o->fgrp = nfg;
 		closefgrp(ofg);
 	}

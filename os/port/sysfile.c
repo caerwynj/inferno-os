@@ -35,12 +35,12 @@ newfd(Chan *c)
 	int i;
 	Fgrp *f = up->env->fgrp;
 
-	lock(f);
+	lock(&f->l);
 	for(i=f->minfd; i<f->nfd; i++)
 		if(f->fd[i] == 0)
 			break;
 	if(i >= f->nfd && growfd(f, i) < 0){
-		unlock(f);
+		unlock(&f->l);
 		exhausted("file descriptors");
 		return -1;
 	}
@@ -48,7 +48,7 @@ newfd(Chan *c)
 	if(i > f->maxfd)
 		f->maxfd = i;
 	f->fd[i] = c;
-	unlock(f);
+	unlock(&f->l);
 	return i;
 }
 
@@ -59,14 +59,14 @@ fdtochan(Fgrp *f, int fd, int mode, int chkmnt, int iref)
 
 	c = 0;
 
-	lock(f);
+	lock(&f->l);
 	if(fd<0 || f->maxfd<fd || (c = f->fd[fd])==0) {
-		unlock(f);
+		unlock(&f->l);
 		error(Ebadfd);
 	}
 	if(iref)
-		incref(c);
-	unlock(f);
+		incref(&c->r);
+	unlock(&f->l);
 
 	if(chkmnt && (c->flag&CMSG)) {
 		if(iref)
@@ -107,9 +107,9 @@ kchanio(void *vc, void *buf, int n, int mode)
 	else
 		r = devtab[c->type]->write(c, buf, n, c->offset);
 
-	lock(c);
+	lock(&c->l);
 	c->offset += r;
-	unlock(c);
+	unlock(&c->l);
 	poperror();
 	return r;
 }
@@ -133,11 +133,11 @@ fdclose(Fgrp *f, int fd)
 	int i;
 	Chan *c;
 
-	lock(f);
+	lock(&f->l);
 	c = f->fd[fd];
 	if(c == 0){
 		/* can happen for users with shared fd tables */
-		unlock(f);
+		unlock(&f->l);
 		return;
 	}
 	f->fd[fd] = 0;
@@ -146,7 +146,7 @@ fdclose(Fgrp *f, int fd)
 			f->maxfd = i;
 	if(fd < f->minfd)
 		f->minfd = fd;
-	unlock(f);
+	unlock(&f->l);
 	cclose(c);
 }
 
@@ -229,9 +229,9 @@ kdup(int old, int new)
 		error(Eperm);
 	fd = new;
 	if(fd != -1){
-		lock(f);
+		lock(&f->l);
 		if(fd<0 || growfd(f, fd) < 0) {
-			unlock(f);
+			unlock(&f->l);
 			cclose(c);
 			error(Ebadfd);
 		}
@@ -239,7 +239,7 @@ kdup(int old, int new)
 			f->maxfd = fd;
 		oc = f->fd[fd];
 		f->fd[fd] = c;
-		unlock(f);
+		unlock(&f->l);
 		if(oc)
 			cclose(oc);
 	}else{
@@ -648,26 +648,26 @@ rread(int fd, void *va, long n, vlong *offp)
 		n = unionread(c, va, n);
 	else{
 		if(offp == nil){
-			lock(c);	/* lock for vlong assignment */
+			lock(&c->l);	/* lock for vlong assignment */
 			off = c->offset;
-			unlock(c);
+			unlock(&c->l);
 		}else
 			off = *offp;
 		if(off < 0)
 			error(Enegoff);
 		if(off == 0){
 			if(offp == nil){
-				lock(c);
+				lock(&c->l);
 				c->offset = 0;
 				c->dri = 0;
-				unlock(c);
+				unlock(&c->l);
 			}
 			unionrewind(c);
 		}
 		n = devtab[c->type]->read(c, va, n, off);
-		lock(c);
+		lock(&c->l);
 		c->offset += n;
-		unlock(c);
+		unlock(&c->l);
 	}
 
 	poperror();
@@ -742,22 +742,22 @@ kseek(int fd, vlong off, int whence)
 			unionrewind(c);
 		}else if(off < 0)
 			error(Enegoff);
-		lock(c);	/* lock for vlong assignment */
+		lock(&c->l);	/* lock for vlong assignment */
 		c->offset = off;
-		unlock(c);
+		unlock(&c->l);
 		break;
 
 	case 1:
 		if(c->qid.type & QTDIR)
 			error(Eisdir);
-		lock(c);	/* lock for read/write update */
+		lock(&c->l);	/* lock for read/write update */
 		off += c->offset;
 		if(off < 0){
-			unlock(c);
+			unlock(&c->l);
 			error(Enegoff);
 		}
 		c->offset = off;
-		unlock(c);
+		unlock(&c->l);
 		break;
 
 	case 2:
@@ -770,9 +770,9 @@ kseek(int fd, vlong off, int whence)
 		free(dir);
 		if(off < 0)
 			error(Enegoff);
-		lock(c);	/* lock for read/write update */
+		lock(&c->l);	/* lock for read/write update */
 		c->offset = off;
-		unlock(c);
+		unlock(&c->l);
 		break;
 
 	default:
@@ -855,18 +855,18 @@ rwrite(int fd, void *va, long n, vlong *offp)
 		error(Etoosmall);
 
 	if(offp == nil){
-		lock(c);
+		lock(&c->l);
 		off = c->offset;
 		c->offset += n;
-		unlock(c);
+		unlock(&c->l);
 	}else
 		off = *offp;
 
 	if(waserror()){
 		if(offp == nil){
-			lock(c);
+			lock(&c->l);
 			c->offset -= n;
-			unlock(c);
+			unlock(&c->l);
 		}
 		nexterror();
 	}
@@ -876,9 +876,9 @@ rwrite(int fd, void *va, long n, vlong *offp)
 	poperror();
 
 	if(offp == nil && m < n){
-		lock(c);
+		lock(&c->l);
 		c->offset -= n - m;
-		unlock(c);
+		unlock(&c->l);
 	}
 
 	poperror();

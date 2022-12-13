@@ -4,12 +4,12 @@ PORTHFILES=\
 	../port/portdat.h\
 	../port/portfns.h\
 
-LIBFILES=${LIBS:%=$ROOT/Inferno/$OBJTYPE/lib/lib%.a}
+LIBFILES=${LIBS:%=$ROOT/$SYSTARG/$OBJTYPE/lib/lib%.a}
 
 CLEANEXTRA=
 
-%.$O:	%.s
-	$AS $ASFLAGS $stem.s
+%.$O:	%.S
+	$AS $ASFLAGS $stem.S
 
 %.$O:	%.c
 	$CC $CFLAGS $stem.c
@@ -74,7 +74,7 @@ sh-lib%.a:VQ:
 		done
 
 clean:V:	cleanconf-$SHELLTYPE
-		rm -f *.[$OS] *.root.[sh] errstr.h *.out $CLEANEXTRA
+		rm -f *.[$OS] *.root.[csh] errstr.h *.out $CLEANEXTRA
 
 cleanconf-sh:V:
 		for i in $CONFLIST $CLEANCONFLIST
@@ -139,11 +139,11 @@ main.$O:	../port/error.h
 netif.$O:	../port/netif.h
 proc.$O:	errstr.h	$INTERP
 screen.$O:	screen.h
-trap.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
+trap.$O:	$ROOT/$SYSTARG/$OBJTYPE/include/ureg.h
 
 devroot.$O:	$CONF.root.h
 $CONF.$O:	$CONF.root.h
-$CONF.root.s $CONF.root.h: $CONF ../init/$INIT.dis ../port/mkroot $ROOTFILES
+$CONF.root.c $CONF.root.h: $CONF ../init/$INIT.dis ../port/mkroot $ROOTFILES
 	$SHELLNAME ../port/mkroot $CONF
 
-%.$O:	$ROOT/Inferno/$OBJTYPE/include/u.h ../port/lib.h mem.h dat.h fns.h io.h ../port/error.h ../port/portdat.h ../port/portfns.h
+%.$O:	$ROOT/$SYSTARG/$OBJTYPE/include/u.h ../port/lib.h mem.h dat.h fns.h io.h ../port/error.h ../port/portdat.h ../port/portfns.h

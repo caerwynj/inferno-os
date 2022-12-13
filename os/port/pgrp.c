@@ -14,7 +14,7 @@ newpgrp(void)
 	Pgrp *p;
 
 	p = smalloc(sizeof(Pgrp));
-	p->ref = 1;
+	p->r.ref = 1;
 	p->pgrpid = incref(&pgrpid);
 	p->progmode = 0644;
 	return p;
@@ -25,7 +25,7 @@ closepgrp(Pgrp *p)
 {
 	Mhead **h, **e, *f, *next;
 	
-	if(p == nil || decref(p) != 0)
+	if(p == nil || decref(&p->r) != 0)
 		return;
 
 	wlock(&p->ns);
@@ -99,8 +99,8 @@ pgrpcpy(Pgrp *to, Pgrp *from)
 			if(mh == nil)
 				error(Enomem);
 			mh->from = f->from;
-			mh->ref = 1;
-			incref(mh->from);
+			mh->r.ref = 1;
+			incref(&mh->from->r);
 			*l = mh;
 			l = &mh->hash;
 			link = &mh->mount;
@@ -139,14 +139,14 @@ newfgrp(Fgrp *old)
 	int n;
 
 	new = smalloc(sizeof(Fgrp));
-	new->ref = 1;
+	new->r.ref = 1;
 	n = DELTAFD;
 	if(old != nil){
-		lock(old);
+		lock(&old->l);
 		if(old->maxfd >= n)
 			n = (old->maxfd+1 + DELTAFD-1)/DELTAFD * DELTAFD;
 		new->maxfd = old->maxfd;
-		unlock(old);
+		unlock(&old->l);
 	}
 	new->nfd = n;
 	new->fd = smalloc(n*sizeof(Chan*));
@@ -162,15 +162,15 @@ dupfgrp(Fgrp *f)
 	int n;
 
 	new = smalloc(sizeof(Fgrp));
-	new->ref = 1;
-	lock(f);
+	new->r.ref = 1;
+	lock(&f->l);
 	n = DELTAFD;
 	if(f->maxfd >= n)
 		n = (f->maxfd+1 + DELTAFD-1)/DELTAFD * DELTAFD;
 	new->nfd = n;
 	new->fd = malloc(n*sizeof(Chan*));
 	if(new->fd == nil){
-		unlock(f);
+		unlock(&f->l);
 		free(new);
 		error(Enomem);
 	}
@@ -178,11 +178,11 @@ dupfgrp(Fgrp *f)
 	new->minfd = f->minfd;
 	for(i = 0; i <= f->maxfd; i++) {
 		if(c = f->fd[i]){
-			incref(c);
+			incref(&c->r);
 			new->fd[i] = c;
 		}
 	}
-	unlock(f);
+	unlock(&f->l);
 
 	return new;
 }
@@ -193,7 +193,7 @@ closefgrp(Fgrp *f)
 	int i;
 	Chan *c;
 
-	if(f == nil || decref(f) != 0)
+	if(f == nil || decref(&f->r) != 0)
 		return;
 
 	for(i = 0; i <= f->maxfd; i++)
@@ -212,7 +212,7 @@ newmount(Mhead *mh, Chan *to, int flag, char *spec)
 	m = smalloc(sizeof(Mount));
 	m->to = to;
 	m->head = mh;
-	incref(to);
+	incref(&to->r);
 	m->mountid = incref(&mountid);
 	m->mflag = flag;
 	if(spec != 0)
@@ -259,7 +259,7 @@ closesigs(Skeyset *s)
 {
 	int i;
 
-	if(s == nil || decref(s) != 0)
+	if(s == nil || decref(&s->r) != 0)
 		return;
 	for(i=0; i<s->nkey; i++)
 		freeskey(s->keys[i]);
@@ -269,7 +269,7 @@ closesigs(Skeyset *s)
 void
 freeskey(Signerkey *key)
 {
-	if(key == nil || decref(key) != 0)
+	if(key == nil || decref(&key->r) != 0)
 		return;
 	free(key->owner);
 	(*key->pkfree)(key->pk);

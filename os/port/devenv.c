@@ -16,7 +16,7 @@ enum
 };
 
 static int
-envgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
+envgen(Chan *c, char* zc, Dirtab* zdt, int zi, int s, Dir *dp)
 {
 	Egrp *eg;
 	Evalue *e;
@@ -26,17 +26,17 @@ envgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
 		return 1;
 	}
 	eg = up->env->egrp;
-	qlock(eg);
+	qlock(&eg->l);
 	for(e = eg->entries; e != nil && s != 0; e = e->next)
 		s--;
 	if(e == nil) {
-		qunlock(eg);
+		qunlock(&eg->l);
 		return -1;
 	}
 	/* make sure name string continues to exist after we release lock */
 	kstrcpy(up->genbuf, e->var, sizeof up->genbuf);
 	devdir(c, e->qid, up->genbuf, e->len, eve, 0666, dp);
-	qunlock(eg);
+	qunlock(&eg->l);
 	return 1;
 }
 
@@ -77,12 +77,12 @@ envopen(Chan *c, int mode)
 		return c;
 	}
 	eg = up->env->egrp;
-	qlock(eg);
+	qlock(&eg->l);
 	for(e = eg->entries; e != nil; e = e->next)
 		if(e->qid.path == c->qid.path)
 			break;
 	if(e == nil) {
-		qunlock(eg);
+		qunlock(&eg->l);
 		error(Enonexist);
 	}
 	if((mode & OTRUNC) && e->val) {
@@ -91,7 +91,7 @@ envopen(Chan *c, int mode)
 		e->len = 0;
 		e->qid.vers++;
 	}
-	qunlock(eg);
+	qunlock(&eg->l);
 	c->mode = openmode(mode);
 	c->flag |= COPEN;
 	c->offset = 0;
@@ -99,7 +99,7 @@ envopen(Chan *c, int mode)
 }
 
 static void
-envcreate(Chan *c, char *name, int mode, ulong)
+envcreate(Chan *c, char *name, int mode, ulong zl)
 {
 	Egrp *eg;
 	Evalue *e, **le;
@@ -110,9 +110,9 @@ envcreate(Chan *c, char *name, int mode, ulong)
 		error("name too long");	/* needs to fit for stat */
 	mode = openmode(mode);
 	eg = up->env->egrp;
-	qlock(eg);
+	qlock(&eg->l);
 	if(waserror()){
-		qunlock(eg);
+		qunlock(&eg->l);
 		nexterror();
 	}
 	for(le = &eg->entries; (e = *le) != nil; le = &e->next)
@@ -130,7 +130,7 @@ envcreate(Chan *c, char *name, int mode, ulong)
 	c->qid = e->qid;
 	eg->vers++;
 	poperror();
-	qunlock(eg);
+	qunlock(&eg->l);
 	c->offset = 0;
 	c->flag |= COPEN;
 	c->mode = mode;
@@ -152,9 +152,9 @@ envread(Chan *c, void *a, long n, vlong offset)
 	if(c->qid.type & QTDIR)
 		return devdirread(c, a, n, 0, 0, envgen);
 	eg = up->env->egrp;
-	qlock(eg);
+	qlock(&eg->l);
 	if(waserror()){
-		qunlock(eg);
+		qunlock(&eg->l);
 		nexterror();
 	}
 	for(e = eg->entries; e != nil; e = e->next)
@@ -171,7 +171,7 @@ envread(Chan *c, void *a, long n, vlong offset)
 	else
 		memmove(a, e->val+offset, n);
 	poperror();
-	qunlock(eg);
+	qunlock(&eg->l);
 	return n;
 }
 
@@ -189,9 +189,9 @@ envwrite(Chan *c, void *a, long n, vlong offset)
 	if(ve > Maxenvsize)
 		error(Etoobig);
 	eg = up->env->egrp;
-	qlock(eg);
+	qlock(&eg->l);
 	if(waserror()){
-		qunlock(eg);
+		qunlock(&eg->l);
 		nexterror();
 	}
 	for(e = eg->entries; e != nil; e = e->next)
@@ -210,7 +210,7 @@ envwrite(Chan *c, void *a, long n, vlong offset)
 	memmove(e->val+offset, a, n);
 	e->qid.vers++;
 	poperror();
-	qunlock(eg);
+	qunlock(&eg->l);
 	return n;
 }
 
@@ -223,17 +223,17 @@ envremove(Chan *c)
 	if(c->qid.type & QTDIR)
 		error(Eperm);
 	eg = up->env->egrp;
-	qlock(eg);
+	qlock(&eg->l);
 	for(l = &eg->entries; (e = *l) != nil; l = &e->next)
 		if(e->qid.path == c->qid.path)
 			break;
 	if(e == nil) {
-		qunlock(eg);
+		qunlock(&eg->l);
 		error(Enonexist);
 	}
 	*l = e->next;
 	eg->vers++;
-	qunlock(eg);
+	qunlock(&eg->l);
 	free(e->var);
 	if(e->val != nil)
 		free(e->val);
@@ -270,7 +270,7 @@ newegrp(void)
 	Egrp	*e;
 
 	e = smalloc(sizeof(Egrp));
-	e->ref = 1;
+	e->r.ref = 1;
 	return e;
 }
 
@@ -279,7 +279,7 @@ closeegrp(Egrp *e)
 {
 	Evalue *el, *nl;
 
-	if(e == nil || decref(e) != 0)
+	if(e == nil || decref(&e->r) != 0)
 		return;
 	for (el = e->entries; el != nil; el = nl) {
 		free(el->var);
@@ -299,7 +299,7 @@ egrpcpy(Egrp *to, Egrp *from)
 	if(from == nil)
 		return;
 	last = &to->entries;
-	qlock(from);
+	qlock(&from->l);
 	for (e = from->entries; e != nil; e = e->next) {
 		ne = smalloc(sizeof(Evalue));
 		ne->var = smalloc(strlen(e->var)+1);
@@ -313,11 +313,11 @@ egrpcpy(Egrp *to, Egrp *from)
 		*last = ne;
 		last = &ne->next;
 	}
-	qunlock(from);
+	qunlock(&from->l);
 }
 
 void
-ksetenv(char *var, char *val, int)
+ksetenv(char *var, char *val, int zi)
 {
 	Chan *c;
 	char buf[2*KNAMELEN];

@@ -24,7 +24,7 @@ typedef struct Queue	Queue;
 
 struct Queue
 {
-	Lock;
+	Lock l;
 
 	Block*	bfirst;		/* buffer */
 	Block*	blast;
@@ -403,12 +403,12 @@ qget(Queue *q)
 	Block *b;
 
 	/* sync with qwrite */
-	ilock(q);
+	ilock(&q->l);
 
 	b = q->bfirst;
 	if(b == nil){
 		q->state |= Qstarve;
-		iunlock(q);
+		iunlock(&q->l);
 		return nil;
 	}
 	q->bfirst = b->next;
@@ -424,7 +424,7 @@ qget(Queue *q)
 	} else
 		dowakeup = 0;
 
-	iunlock(q);
+	iunlock(&q->l);
 
 	if(dowakeup)
 		wakeup(&q->wr);
@@ -442,7 +442,7 @@ qdiscard(Queue *q, int len)
 	Block *b;
 	int dowakeup, n, sofar;
 
-	ilock(q);
+	ilock(&q->l);
 	for(sofar = 0; sofar < len; sofar += n){
 		b = q->bfirst;
 		if(b == nil)
@@ -478,7 +478,7 @@ qdiscard(Queue *q, int len)
 	} else
 		dowakeup = 0;
 
-	iunlock(q);
+	iunlock(&q->l);
 
 	if(dowakeup)
 		wakeup(&q->wr);
@@ -498,13 +498,13 @@ qconsume(Queue *q, void *vp, int len)
 	Block *tofree = nil;
 
 	/* sync with qwrite */
-	ilock(q);
+	ilock(&q->l);
 
 	for(;;) {
 		b = q->bfirst;
 		if(b == 0){
 			q->state |= Qstarve;
-			iunlock(q);
+			iunlock(&q->l);
 			return -1;
 		}
 		QDEBUG checkb(b, "qconsume 1");
@@ -546,7 +546,7 @@ qconsume(Queue *q, void *vp, int len)
 	} else
 		dowakeup = 0;
 
-	iunlock(q);
+	iunlock(&q->l);
 
 	if(dowakeup)
 		wakeup(&q->wr);
@@ -564,16 +564,16 @@ qpass(Queue *q, Block *b)
 
 	/* sync with qread */
 	dowakeup = 0;
-	ilock(q);
+	ilock(&q->l);
 	if(q->len >= q->limit){
 		freeblist(b);
-		iunlock(q);
+		iunlock(&q->l);
 		return -1;
 	}
 	if(q->state & Qclosed){
 		len = blocklen(b);
 		freeblist(b);
-		iunlock(q);
+		iunlock(&q->l);
 		return len;
 	}
 
@@ -602,7 +602,7 @@ qpass(Queue *q, Block *b)
 		q->state &= ~Qstarve;
 		dowakeup = 1;
 	}
-	iunlock(q);
+	iunlock(&q->l);
 
 	if(dowakeup)
 		wakeup(&q->rr);
@@ -617,11 +617,11 @@ qpassnolim(Queue *q, Block *b)
 
 	/* sync with qread */
 	dowakeup = 0;
-	ilock(q);
+	ilock(&q->l);
 
 	if(q->state & Qclosed){
 		freeblist(b);
-		iunlock(q);
+		iunlock(&q->l);
 		return BALLOC(b);
 	}
 
@@ -650,7 +650,7 @@ qpassnolim(Queue *q, Block *b)
 		q->state &= ~Qstarve;
 		dowakeup = 1;
 	}
-	iunlock(q);
+	iunlock(&q->l);
 
 	if(dowakeup)
 		wakeup(&q->rr);
@@ -692,12 +692,12 @@ qproduce(Queue *q, void *vp, int len)
 
 	/* sync with qread */
 	dowakeup = 0;
-	ilock(q);
+	ilock(&q->l);
 
 	/* no waiting receivers, room in buffer? */
 	if(q->len >= q->limit){
 		q->state |= Qflow;
-		iunlock(q);
+		iunlock(&q->l);
 		return -1;
 	}
 
@@ -708,7 +708,7 @@ qproduce(Queue *q, void *vp, int len)
 		/* need a new block */
 		b = iallocb(len);
 		if(b == 0){
-			iunlock(q);
+			iunlock(&q->l);
 			return 0;
 		}
 		if(q->bfirst)
@@ -732,7 +732,7 @@ qproduce(Queue *q, void *vp, int len)
 
 	if(q->len >= q->limit)
 		q->state |= Qflow;
-	iunlock(q);
+	iunlock(&q->l);
 
 	if(dowakeup)
 		wakeup(&q->rr);
@@ -753,13 +753,13 @@ qcopy(Queue *q, int len, ulong offset)
 
 	nb = allocb(len);
 
-	ilock(q);
+	ilock(&q->l);
 
 	/* go to offset */
 	b = q->bfirst;
 	for(sofar = 0; ; sofar += n){
 		if(b == nil){
-			iunlock(q);
+			iunlock(&q->l);
 			return nb;
 		}
 		n = BLEN(b);
@@ -786,7 +786,7 @@ qcopy(Queue *q, int len, ulong offset)
 		n = BLEN(b);
 		p = b->rp;
 	}
-	iunlock(q);
+	iunlock(&q->l);
 
 	return nb;
 }
@@ -861,9 +861,9 @@ qwait(Queue *q)
 		}
 
 		q->state |= Qstarve;	/* flag requesting producer to wake me */
-		iunlock(q);
+		iunlock(&q->l);
 		sleep(&q->rr, notempty, q);
-		ilock(q);
+		ilock(&q->l);
 	}
 	return 1;
 }
@@ -997,7 +997,7 @@ qwakeup_iunlock(Queue *q)
 		dowakeup = 1;
 	}
 
-	iunlock(q);
+	iunlock(&q->l);
 
 	/* wakeup flow controlled writers */
 	if(dowakeup){
@@ -1022,17 +1022,17 @@ qbread(Queue *q, int len)
 		nexterror();
 	}
 
-	ilock(q);
+	ilock(&q->l);
 	switch(qwait(q)){
 	case 0:
 		/* queue closed */
-		iunlock(q);
+		iunlock(&q->l);
 		qunlock(&q->rlock);
 		poperror();
 		return nil;
 	case -1:
 		/* multiple reads on a closed queue */
-		iunlock(q);
+		iunlock(&q->l);
 		error(q->err);
 	}
 
@@ -1077,18 +1077,18 @@ qread(Queue *q, void *vp, int len)
 		nexterror();
 	}
 
-	ilock(q);
+	ilock(&q->l);
 again:
 	switch(qwait(q)){
 	case 0:
 		/* queue closed */
-		iunlock(q);
+		iunlock(&q->l);
 		qunlock(&q->rlock);
 		poperror();
 		return 0;
 	case -1:
 		/* multiple reads on a closed queue */
-		iunlock(q);
+		iunlock(&q->l);
 		error(q->err);
 	}
 
@@ -1126,9 +1126,9 @@ again:
 	}
 
 	/* copy to user space outside of the ilock */
-	iunlock(q);
+	iunlock(&q->l);
 	b = bl2mem(vp, first, len);
-	ilock(q);
+	ilock(&q->l);
 
 	/* take care of any left over partial block */
 	if(b != nil){
@@ -1181,18 +1181,18 @@ qbwrite(Queue *q, Block *b)
 		nexterror();
 	}
 
-	ilock(q);
+	ilock(&q->l);
 
 	/* give up if the queue is closed */
 	if(q->state & Qclosed){
-		iunlock(q);
+		iunlock(&q->l);
 		error(q->err);
 	}
 
 	/* if nonblocking, don't queue over the limit */
 	if(q->len >= q->limit){
 		if(q->noblock){
-			iunlock(q);
+			iunlock(&q->l);
 			freeb(b);
 			noblockcnt += n;
 			qunlock(&q->wlock);
@@ -1218,7 +1218,7 @@ qbwrite(Queue *q, Block *b)
 		q->state &= ~Qstarve;
 		dowakeup = 1;
 	}
-	iunlock(q);
+	iunlock(&q->l);
 
 	/*  get output going again */
 	if(q->kick && (dowakeup || (q->state&Qkick)))
@@ -1244,9 +1244,9 @@ qbwrite(Queue *q, Block *b)
 		if(q->noblock || qnotfull(q))
 			break;
 
-		ilock(q);
+		ilock(&q->l);
 		q->state |= Qflow;
-		iunlock(q);
+		iunlock(&q->l);
 		sleep(&q->wr, qnotfull, q);
 	}
 	USED(b);
@@ -1318,7 +1318,7 @@ qiwrite(Queue *q, void *vp, int len)
 		memmove(b->wp, p+sofar, n);
 		b->wp += n;
 
-		ilock(q);
+		ilock(&q->l);
 
 		QDEBUG checkb(b, "qiwrite");
 		if(q->bfirst)
@@ -1334,7 +1334,7 @@ qiwrite(Queue *q, void *vp, int len)
 			dowakeup = 1;
 		}
 
-		iunlock(q);
+		iunlock(&q->l);
 
 		if(dowakeup){
 			if(q->kick)
@@ -1372,7 +1372,7 @@ qclose(Queue *q)
 		return;
 
 	/* mark it */
-	ilock(q);
+	ilock(&q->l);
 	q->state |= Qclosed;
 	q->state &= ~(Qflow|Qstarve);
 	strcpy(q->err, Ehungup);
@@ -1381,7 +1381,7 @@ qclose(Queue *q)
 	q->len = 0;
 	q->dlen = 0;
 	q->noblock = 0;
-	iunlock(q);
+	iunlock(&q->l);
 
 	/* free queued blocks */
 	freeblist(bfirst);
@@ -1399,13 +1399,13 @@ void
 qhangup(Queue *q, char *msg)
 {
 	/* mark it */
-	ilock(q);
+	ilock(&q->l);
 	q->state |= Qclosed;
 	if(msg == 0 || *msg == 0)
 		strcpy(q->err, Ehungup);
 	else
 		strncpy(q->err, msg, ERRMAX-1);
-	iunlock(q);
+	iunlock(&q->l);
 
 	/* wake up readers/writers */
 	wakeup(&q->rr);
@@ -1427,12 +1427,12 @@ qisclosed(Queue *q)
 void
 qreopen(Queue *q)
 {
-	ilock(q);
+	ilock(&q->l);
 	q->state &= ~Qclosed;
 	q->state |= Qstarve;
 	q->eof = 0;
 	q->limit = q->inilim;
-	iunlock(q);
+	iunlock(&q->l);
 }
 
 /*
@@ -1494,12 +1494,12 @@ qflush(Queue *q)
 	Block *bfirst;
 
 	/* mark it */
-	ilock(q);
+	ilock(&q->l);
 	bfirst = q->bfirst;
 	q->bfirst = 0;
 	q->len = 0;
 	q->dlen = 0;
-	iunlock(q);
+	iunlock(&q->l);
 
 	/* free queued blocks */
 	freeblist(bfirst);

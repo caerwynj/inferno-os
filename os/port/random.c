@@ -6,7 +6,7 @@
 
 static struct
 {
-	QLock;
+	QLock l;
 	Rendez	producer;
 	Rendez	consumer;
 	ulong	randomcount;
@@ -24,7 +24,7 @@ static struct
 } rb;
 
 static int
-rbnotfull(void*)
+rbnotfull(void* v)
 {
 	int i;
 
@@ -35,13 +35,13 @@ rbnotfull(void*)
 }
 
 static int
-rbnotempty(void*)
+rbnotempty(void* v)
 {
 	return rb.wp != rb.rp;
 }
 
 static void
-genrandom(void*)
+genrandom(void* v)
 {
 	setpri(PriBackground);
 
@@ -111,9 +111,9 @@ randomread(void *xp, ulong n)
 
 	p = xp;
 
-	qlock(&rb);
+	qlock(&rb.l);
 	if(waserror()){
-		qunlock(&rb);
+		qunlock(&rb.l);
 		nexterror();
 	}
 	if(!rb.kprocstarted){
@@ -148,7 +148,7 @@ randomread(void *xp, ulong n)
 		rb.filled = 0;
 	}
 	poperror();
-	qunlock(&rb);
+	qunlock(&rb.l);
 
 	wakeup(&rb.producer);
 

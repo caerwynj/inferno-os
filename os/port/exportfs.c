@@ -24,7 +24,7 @@ enum
 
 struct Export
 {
-	Lock;
+	Lock l;
 	Ref	r;
 	Exq*	work;
 	Lock	fidlock;
@@ -57,7 +57,7 @@ struct Fid
 
 struct Uqid
 {
-	Ref;
+	Ref r;
 	int	type;
 	int	dev;
 	vlong	oldpath;
@@ -67,7 +67,7 @@ struct Uqid
 
 struct Exq
 {
-	Lock;
+	Lock l;
 	int	busy;	/* fcall in progress */
 	int	finished;	/* will do no more work on this request or flushes */
 	Exq*	next;
@@ -155,11 +155,11 @@ export(int fd, char *dir, int async)
 	fs->r.ref = 1;
 	pg = up->env->pgrp;
 	fs->pgrp = pg;
-	incref(pg);
+	incref(&pg->r);
 	eg = up->env->egrp;
 	fs->egrp = eg;
 	if(eg != nil)
-		incref(eg);
+		incref(&eg->r);
 	fs->fgrp = newfgrp(nil);
 	kstrdup(&fs->user, up->env->user);
 	fs->root = dc;
@@ -387,14 +387,14 @@ exflushed(Export *fs, Exq *fq)
 	unlock(&exq.l);
 
 	/* tricky case: in progress */
-	lock(fs);
+	lock(&fs->l);
 	for(q = fs->work; q != nil; q = q->next)
 		if(q->in.tag == fq->in.oldtag){
 			pid = 0;
-			lock(q);
+			lock(&q->l);
 			if(q->finished){
 				/* slave replied and emptied its flush queue; we can Rflush now */
-				unlock(q);
+				unlock(&q->l);
 				return 1;
 			}
 			/* append to slave's flush queue */
@@ -408,13 +408,13 @@ exflushed(Export *fs, Exq *fq)
 				pid = q->slave->pid;
 				swiproc(q->slave, 0);
 			}
-			unlock(q);
-			unlock(fs);
+			unlock(&q->l);
+			unlock(&fs->l);
 			if(exdebug && pid)
 				print("export: swiproc %ld to flush %d\n", pid, fq->in.oldtag);
 			return 0;
 		}
-	unlock(fs);
+	unlock(&fs->l);
 
 	/* not found */
 	return 1;
@@ -450,15 +450,15 @@ exshutdown(Export *fs)
 	unlock(&exq.l);
 
 	/* tell slaves to abandon work in progress */
-	lock(fs);
+	lock(&fs->l);
 	while((q = fs->work) != nil){
 		fs->work = q->next;
-		lock(q);
+		lock(&q->l);
 		q->shut = 1;
 		swiproc(q->slave, 0);	/* whether busy or not */
-		unlock(q);
+		unlock(&q->l);
 	}
-	unlock(fs);
+	unlock(&fs->l);
 }
 
 static void
@@ -500,13 +500,13 @@ exfree(Export *fs)
 }
 
 static int
-exwork(void*)
+exwork(void* v)
 {
 	return exq.head != nil;
 }
 
 static void
-exslave(void*)
+exslave(void* v)
 {
 	Export *fs;
 	Exq *q, *t, *fq, **last;
@@ -542,10 +542,10 @@ exslave(void*)
 		q->slave = up;
 		q->busy = 1;	/* fcall in progress: interruptible */
 		fs = q->export;
-		lock(fs);
+		lock(&fs->l);
 		q->next = fs->work;
 		fs->work = q;
-		unlock(fs);
+		unlock(&fs->l);
 		unlock(&exq.l);
 
 		up->env->pgrp = q->export->pgrp;
@@ -588,12 +588,12 @@ exslave(void*)
 		 * might have changed state), unless the export has shut down completely.
 		 * must also reply to each flush in order, and only after the original reply (if sent).
 		 */
-		lock(q);
+		lock(&q->l);
 		notkilled();
 		q->busy = 0;	/* operation complete */
 		if(!q->shut){
 			if(q->flush == nil || err == nil){
-				unlock(q);
+				unlock(&q->l);
 				q->out.type = q->in.type+1;
 				q->out.tag = q->in.tag;
 				if(err){
@@ -601,26 +601,26 @@ exslave(void*)
 					q->out.ename = err;
 				}
 				exreply(q, "exslave");
-				lock(q);
+				lock(&q->l);
 			}
 			while((fq = q->flush) != nil && !q->shut){
 				q->flush = fq->next;
-				unlock(q);
+				unlock(&q->l);
 				exreply(fq, "exslave");
 				exfreeq(fq);
-				lock(q);
+				lock(&q->l);
 			}
 		}
 		q->finished = 1;	/* promise not to send any more */
-		unlock(q);
+		unlock(&q->l);
 
-		lock(fs);
+		lock(&fs->l);
 		for(last = &fs->work; (t = *last) != nil; last = &t->next)
 			if(t == q){
 				*last = q->next;
 				break;
 			}
-		unlock(fs);
+		unlock(&fs->l);
 
 		notkilled();
 		exfreeq(q);
@@ -773,13 +773,13 @@ exmount(Chan *c, Mhead **mp, int doname)
 		poperror();
 		if(doname){
 			oname = c->name;
-			incref(oname);
+			incref(&oname->r);
 			cnameclose(nc->name);
 			nc->name = oname;
 		}
 		return nc;
 	}
-	incref(c);
+	incref(&c->r);
 	return c;
 }
 
@@ -887,7 +887,7 @@ Exwalk(Export *fs, Fcall *t, Fcall *r)
 	c = cclone(f->chan);
 	poperror();
 	qid = f->qid;
-	incref(qid);
+	incref(&qid->r);
 	r->nwqid = 0;
 	if(t->nwname > 0){
 		for(i=0; i<t->nwname; i++){
@@ -1010,7 +1010,7 @@ Excreate(Export *fs, Fcall *t, Fcall *r)
 	}
 	if(m != nil){
 		oname = c.c->name;
-		incref(oname);
+		incref(&oname->r);
 		if(waserror()){
 			cnameclose(oname);
 			nexterror();
@@ -1099,9 +1099,9 @@ Exread(Export *fs, Fcall *t, Fcall *r)
 		else{
 			c->offset = off;
 			n = devtab[c->type]->read(c, r->data, n, off);
-			lock(c);
+			lock(&c->l);
 			c->offset += n;
-			unlock(c);
+			unlock(&c->l);
 		}
 		f->offset = off + n;
 		if(n == 0 || !seek)
@@ -1282,7 +1282,7 @@ uqidalloc(Export *fs, Chan *c)
 	qlock(&fs->qidlock);
 	hp = uqidlook(fs->qids, c, c->qid.path);
 	if((q = *hp) != nil){
-		incref(q);
+		incref(&q->r);
 		qunlock(&fs->qidlock);
 		return q;
 	}
@@ -1291,7 +1291,7 @@ uqidalloc(Export *fs, Chan *c)
 		qunlock(&fs->qidlock);
 		error(Enomem);
 	}
-	q->ref = 1;
+	q->r.ref = 1;
 	q->type = c->type;
 	q->dev = c->dev;
 	q->oldpath = c->qid.path;
@@ -1315,7 +1315,7 @@ freeuqid(Export *fs, Uqid *q)
 	if(q == nil)
 		return;
 	qlock(&fs->qidlock);
-	if(decref(q) == 0){
+	if(decref(&q->r) == 0){
 		hp = &fs->qids[uqidhash(q->oldpath)];
 		for(; *hp != nil; hp = &(*hp)->next)
 			if(*hp == q){

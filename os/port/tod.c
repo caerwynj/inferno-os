@@ -35,7 +35,7 @@
 struct {
 	int		init;		// true if initialized
 	ulong	cnt;
-	Lock;
+	Lock l;
 	uvlong	multiplier;	// t = off + (multiplier*ticks)>>31
 	uvlong	divider;	// ticks = (divider*(ticks-off))>>31
 	vlong	hz;		// frequency of fast clock
@@ -52,9 +52,9 @@ todinit(void)
 {
 	if(tod.init)
 		return;
-	ilock(&tod);
+	ilock(&tod.l);
 	tod.last = fastticks((uvlong*)&tod.hz);
-	iunlock(&tod);
+	iunlock(&tod.l);
 	todsetfreq(tod.hz);
 	tod.init = 1;
 	addclock0link(todfix, 100);
@@ -66,14 +66,14 @@ todinit(void)
 void
 todsetfreq(vlong f)
 {
-	ilock(&tod);
+	ilock(&tod.l);
 	tod.hz = f;
 
 	/* calculate multiplier for time conversion */
 	tod.multiplier = mk64fract(TODFREQ, f);
 	tod.divider = mk64fract(f, TODFREQ);
 
-	iunlock(&tod);
+	iunlock(&tod.l);
 }
 
 /*
@@ -85,7 +85,7 @@ todset(vlong t, vlong delta, int n)
 	if(!tod.init)
 		todinit();
 
-	ilock(&tod);
+	ilock(&tod.l);
 	if(t >= 0){
 		tod.off = t;
 		tod.last = fastticks(nil);
@@ -105,7 +105,7 @@ todset(vlong t, vlong delta, int n)
 		tod.send = tod.sstart + n;
 		tod.delta = delta;
 	}
-	iunlock(&tod);
+	iunlock(&tod.l);
 }
 
 /*
@@ -124,7 +124,7 @@ todget(vlong *ticksp)
 	// we don't want time to pass twixt the measuring of fastticks
 	// and grabbing tod.last.  Also none of the vlongs are atomic so
 	// we have to look at them inside the lock.
-	ilock(&tod);
+	ilock(&tod.l);
 	tod.cnt++;
 	ticks = fastticks(nil);
 
@@ -150,7 +150,7 @@ todget(vlong *ticksp)
 	else
 		tod.lasttime = x;
 
-	iunlock(&tod);
+	iunlock(&tod.l);
 
 	if(ticksp != nil)
 		*ticksp = ticks;
@@ -166,10 +166,10 @@ tod2fastticks(vlong ns)
 {
 	uvlong x;
 
-	ilock(&tod);
+	ilock(&tod.l);
 	mul64fract(&x, ns-tod.off, tod.divider);
 	x += tod.last;
-	iunlock(&tod);
+	iunlock(&tod.l);
 	return x;
 }
 
@@ -186,7 +186,7 @@ todfix(void)
 
 	diff = ticks - tod.last;
 	if(diff > tod.hz){
-		ilock(&tod);
+		ilock(&tod.l);
 	
 		// convert to epoch
 		mul64fract(&x, diff, tod.multiplier);
@@ -197,7 +197,7 @@ if(x > 30000000000ULL) print("todfix %llud\n", x);
 		tod.last = ticks;
 		tod.off = x;
 	
-		iunlock(&tod);
+		iunlock(&tod.l);
 	}
 }
 

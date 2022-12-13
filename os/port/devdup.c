@@ -8,7 +8,7 @@
 /* Qid is (2*fd + (file is ctl))+1 */
 
 static int
-dupgen(Chan *c, char *, Dirtab*, int, int s, Dir *dp)
+dupgen(Chan *c, char * zc, Dirtab* zd, int zi, int s, Dir *dp)
 {
 	Fgrp *fgrp = up->env->fgrp;
 	Chan *f;
@@ -92,7 +92,7 @@ dupopen(Chan *c, int omode)
 }
 
 static void
-dupclose(Chan*)
+dupclose(Chan* c)
 {
 }
 
@@ -123,7 +123,7 @@ dupread(Chan *c, void *va, long n, vlong offset)
 }
 
 static long
-dupwrite(Chan*, void*, long, vlong)
+dupwrite(Chan* zc, void* zv, long zl,  vlong zvl)
 {
 	panic("dupwrite");
 	return 0;		/* not reached */
