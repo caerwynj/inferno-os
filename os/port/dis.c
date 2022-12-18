@@ -854,8 +854,10 @@ release(void)
 	int f;
 
 	if(up->type == Interp){
-		if(up->iprog != nil)
+		if(up->iprog != nil){
+			procdump();
 			panic("Double release (Interp)?");
+		}
 		up->iprog = isave();
 	}else{
 		if(((Prog *)up->prog)->state != Pready) panic("double release (GC)?");
@@ -1092,21 +1094,16 @@ disinit(void *a)
 	FPinit();
 	FPsave(&up->env->fpu);
 
-	print("addclock0link\n");
 	opinit();
-	print("opinit\n");
 	modinit();
-	print("modinit\n");
 	poolsummary();
 	excinit();
-	print("excinit\n");
 
 	root = load(initmod);
 	if(root == 0) {
 		kgerrstr(up->genbuf, sizeof up->genbuf);
 		panic("loading \"%s\": %s", initmod, up->genbuf);
 	}
-	print("load mod");
 	p = schedmod(root);
 
 	memmove(p->osenv, up->env, sizeof(Osenv));

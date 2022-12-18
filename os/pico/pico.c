@@ -42,10 +42,9 @@ void modinit(void){
 	sysmodinit();
 }
 
-	int kernel_pool_pcnt = 10;
-	ulong main_pool_pcnt = 40;
-	ulong heap_pool_pcnt = 20;
-	ulong image_pool_pcnt = 40;
+	ulong main_pool_pcnt = 50;
+	ulong heap_pool_pcnt = 40;
+	ulong image_pool_pcnt = 0;
 	int cflag = 0;
 	int consoleprint = 1;
 	int redirectconsole = 1;

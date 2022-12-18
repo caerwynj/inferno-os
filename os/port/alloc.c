@@ -354,7 +354,12 @@ poolalloc(Pool *p, ulong asize)
 	if(t == nil) {
 		p->nbrk--;
 		iunlock(&p->l);
+		print("xalloc returned nil: %d\n", alloc);
+		poolsummary();
+		xsummary();
 		return nil;
+	}else {
+		print("xalloc %d\n", alloc);
 	}
 	/* Double alignment */
 	t = (Bhdr *)(((ulong)t + 7) & ~7);
@@ -555,6 +560,9 @@ malloc(ulong size)
 			setrealloctag(v, 0);
 		}
 		memset(v, 0, size);
+	} else {
+		print("malloc %d\n", size);
+		poolsummary();
 	}
 	return v;
 }

@@ -2,13 +2,11 @@
 
 CONF=pico
 CONFLIST=pico
-loadaddr=0x00008000
 
 #SYSTARG=$OSTARG
 OBJTYPE=arm
 INSTALLDIR=$ROOT/Inferno/$OBJTYPE/bin
 
-#<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE
 
 <| $SHELLNAME ../port/mkdevlist $CONF
 
@@ -33,7 +31,6 @@ HFILES=\
 	fns.h\
 	io.h\
 
-#CFLAGS=-wFV -I./include -I$ROOT/include -I$ROOT/libinterp
 KERNDATE=`{$NDATE}
 
 default:V: i$CONF.uf2
@@ -48,11 +45,6 @@ i$CONF.uf2: i$CONF
 	elf2uf2 i$CONF.elf i$CONF.uf2
 
 <../port/portmkfile
-
-main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
-
-#picoinit.dis:  ../init/picoinit.b
-#		cd ../init; mk picoinit.dis
 
 
 install:V:  i$CONF.uf2

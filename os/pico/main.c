@@ -63,21 +63,18 @@ int main() {
 	//swcursorinit();
 	
 	print("\nARM %ld MHz id %8.8lux firmware: rev %d, mem: %ld\n"
-		,m->cpuhz, getcpuid(), rom_version(), conf.topofmem/MB);
+		,m->cpuhz/Mhz, getcpuid(), rom_version(), (conf.topofmem - KZERO));
 
 	print("Inferno OS %s Vita Nuova\n", VERSION);
 	print("Ported to Raspberry Pi Pico (RP2040) by Caerwyn Jones\n\n");
 
 	procinit();
-	print("procinit\n");
 	links();
 	chandevreset();
-	print("chandevreset\n");
 
 	eve = strdup("inferno");
 
 	userinit();
-	print("userinit\n");
 	schedinit();
 	
 	while (true) {

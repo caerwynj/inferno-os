@@ -59,10 +59,10 @@ port
 	xalloc
 
 code
-	int kernel_pool_pcnt = 10;
-	ulong main_pool_pcnt = 40;
-	ulong heap_pool_pcnt = 20;
-	ulong image_pool_pcnt = 40;
+#	int kernel_pool_pcnt = 10;
+	ulong main_pool_pcnt = 50;
+	ulong heap_pool_pcnt = 40;
+	ulong image_pool_pcnt = 0;
 	int cflag = 0;
 
 	int consoleprint = 1;
@@ -77,25 +77,28 @@ root
 	/chan	/
 	/dev	/
 	/dis
-	/lib	/
 	/env	/
 	/fd	/
 	/net	/
 	/prog	/
-	/n	/
-	/tmp	/
 	/dis/lib
-	/dis/disk
 	/osinit.dis
-	/dis/sh.dis
-	/dis/tiny/sh.dis
+	
+	/dis/sh.dis	/dis/tiny/sh.dis
 	/dis/ls.dis
 	/dis/ps.dis
 	/dis/ns.dis
 	/dis/cat.dis
-	/dis/bind.dis
-	/dis/mount.dis
 	/dis/pwd.dis
 	/dis/echo.dis
 	/dis/cd.dis
+	/dis/bind.dis
+	/dis/mount.dis
+	
+	/dis/lib/readdir.dis
+	/dis/lib/workdir.dis
+	/dis/lib/daytime.dis
+	/dis/lib/bufio.dis
+	/dis/lib/string.dis
+	/dis/lib/arg.dis
 

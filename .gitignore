@@ -97,3 +97,11 @@ y.debug
 
 /services/httpd/root
 
+*.elf
+*.uf2
+ipico
+
+/os/init/*.dis
+/os/init/*.sbl
+*.elf.map
+
