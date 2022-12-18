@@ -6,7 +6,7 @@ TARGFILES=\
 	getfcr-arm.$O\
 #	memmove-arm.$O\
 #	memset-arm.$O\
-#	nan-arm.$O\
+	nan-arm.$O\
 #	strchr-arm.$O\
 #	vlop-arm.$O\
 #	vlrt-arm.$O\

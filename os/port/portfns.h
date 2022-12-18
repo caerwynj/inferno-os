@@ -183,7 +183,7 @@ int		okaddr(ulong, ulong, int);
 int		openmode(ulong);
 Block*		packblock(Block*);
 Block*		padblock(Block*, int);
-void		panic(char*, ...);
+void		panic(const char*, ...);
 Cmdbuf*		parsecmd(char*, int);
 void		pexit(char*, int);
 void		pgrpcpy(Pgrp*, Pgrp*);

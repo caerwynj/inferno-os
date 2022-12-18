@@ -4,7 +4,10 @@
 #include "dat.h"
 #include "fns.h"
 #include "ureg.h"
-#include "armv6.h"
+
+
+int isvalid_wa(void *v) { return (ulong)v < conf.topofmem && !((ulong)v & 3); }
+int isvalid_va(void *v) { return (ulong)v < conf.topofmem; }
 
 void
 dumplongs(char *msg, ulong *v, int n)
@@ -127,9 +130,9 @@ dumparound(uint addr)
 void
 dumpregs(Ureg* ureg)
 {
-	print("TRAP: %s", trapname(ureg->type));
-	if((ureg->psr & PsrMask) != PsrMsvc)
-		print(" in %s", trapname(ureg->psr));
+	print("TRAP: %d", ureg->type);
+//	if((ureg->psr & PsrMask) != PsrMsvc)
+//		print(" in %s", trapname(ureg->psr));
 	print("\n");
 	print("PSR %8.8uX type %2.2uX PC %8.8uX LINK %8.8uX\n",
 		ureg->psr, ureg->type, ureg->pc, ureg->link);

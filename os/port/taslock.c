@@ -67,7 +67,7 @@ ilock(Lock *l)
 			return;
 		}
 		if(conf.nmach < 2)
-			panic("ilock: no way out: pc 0x%lux: lock 0x%lux held by pc 0x%lux", pc, l, l->pc);
+			panic("ilock: no way out: pc 0x%x: lock 0x%x held by pc 0x%x", pc, l, l->pc);
 		for(i=0; ; i++) {
 			if(l->key == 0)
 				break;

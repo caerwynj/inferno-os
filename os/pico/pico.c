@@ -30,27 +30,23 @@ Dev* devtab[16]={
 	nil,
 };
 
+extern void archpicolink(void);
 void links(void){
+	archpicolink();
 }
 
 extern void mathmodinit(void);
 extern void sysmodinit(void);
-extern void keyringmodinit(void);
-extern void cryptmodinit(void);
-extern void ipintsmodinit(void);
 void modinit(void){
 	mathmodinit();
 	sysmodinit();
-	keyringmodinit();
-	cryptmodinit();
-	ipintsmodinit();
 }
 
 	int kernel_pool_pcnt = 10;
 	ulong main_pool_pcnt = 40;
 	ulong heap_pool_pcnt = 20;
 	ulong image_pool_pcnt = 40;
-	int cflag = 1;
+	int cflag = 0;
 	int consoleprint = 1;
 	int redirectconsole = 1;
 	char debug_keys = 1;

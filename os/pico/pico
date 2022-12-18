@@ -8,10 +8,15 @@ dev
 	srv
 	dup
 
+link
+	archpico
+
+misc
+	dump
 lib
 	interp
-	keyring
-	sec
+#	keyring
+#	sec
 	math
 	kern
 	pico
@@ -19,9 +24,9 @@ lib
 mod
 	math
 	sys
-	keyring
-	crypt
-	ipints
+#	keyring
+#	crypt
+#	ipints
 
 port
 	alarm
@@ -58,7 +63,7 @@ code
 	ulong main_pool_pcnt = 40;
 	ulong heap_pool_pcnt = 20;
 	ulong image_pool_pcnt = 40;
-	int cflag = 1;
+	int cflag = 0;
 
 	int consoleprint = 1;
 	int redirectconsole = 1;

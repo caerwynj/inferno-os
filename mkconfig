@@ -4,7 +4,7 @@
 #	They are almost always the same.
 
 #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
-ROOT=$HOME/github/inferno-os
+ROOT=$HOME/github/inferno-pico
 
 #
 #	Specify the flavour of Tk (std for standard builds)

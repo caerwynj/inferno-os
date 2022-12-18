@@ -5,7 +5,7 @@
 #define MS2TK(t)    	((t)/MS2HZ) 	/*! milliseconds to ticks */
 enum { Mhz = 1000 * 1000 };
 
-#define MACHP(n)    (n == 0 ? (Mach*)(MACHADDR) : (Mach*)0)
+#define MACHP(n)    (n == 0 ? (Mach*)(m) : (Mach*)0)
 
 typedef struct ISAConf ISAConf;
 typedef struct Lock Lock;

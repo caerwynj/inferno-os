@@ -1,4 +1,4 @@
-TARGMODEL=	Posix
+TARGMODEL=	Pico
 TARGSHTYPE=	sh
 CPUS=		arm
 

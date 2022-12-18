@@ -271,14 +271,18 @@ iprint(char *fmt, ...)
 	va_end(arg);
 	if(screenputs != nil && iprintscreenputs)
 		screenputs(buf, n);
-	uartputs(buf, n);
+	if(serwrite != nil) {
+		serwrite(buf, n);
+	}
+	//uartputs(buf, n);
 	splx(s);
 
 	return n;
 }
 
+#if !defined(PICO_BUILD)
 void
-panic(char *fmt, ...)
+panic(const char *fmt, ...)
 {
 	int n;
 	va_list arg;
@@ -297,6 +301,7 @@ panic(char *fmt, ...)
 
 	exit(1);
 }
+#endif
 
 void
 _assert(char *fmt)

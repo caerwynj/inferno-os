@@ -1092,16 +1092,21 @@ disinit(void *a)
 	FPinit();
 	FPsave(&up->env->fpu);
 
+	print("addclock0link\n");
 	opinit();
+	print("opinit\n");
 	modinit();
+	print("modinit\n");
+	poolsummary();
 	excinit();
+	print("excinit\n");
 
 	root = load(initmod);
 	if(root == 0) {
 		kgerrstr(up->genbuf, sizeof up->genbuf);
 		panic("loading \"%s\": %s", initmod, up->genbuf);
 	}
-
+	print("load mod");
 	p = schedmod(root);
 
 	memmove(p->osenv, up->env, sizeof(Osenv));

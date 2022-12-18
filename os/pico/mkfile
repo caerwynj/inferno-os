@@ -36,12 +36,16 @@ HFILES=\
 #CFLAGS=-wFV -I./include -I$ROOT/include -I$ROOT/libinterp
 KERNDATE=`{$NDATE}
 
-default:V: i$CONF
+default:V: i$CONF.uf2
 
 i$CONF: $OBJ $CONF.c $CONF.root.h $LIBNAMES
 	$CC $CFLAGS -DKERNDATE=$KERNDATE $CONF.c
 	$LD $LDFLAGS -o $target $OBJ $CONF.$O $LIBFILES  bs2_default_padded_checksummed.S 
 
+i$CONF.uf2: i$CONF
+	cp i$CONF i$CONF.elf
+	strip i$CONF.elf
+	elf2uf2 i$CONF.elf i$CONF.uf2
 
 <../port/portmkfile
 
@@ -50,3 +54,6 @@ main.$O:	$ROOT/Inferno/$OBJTYPE/include/ureg.h
 #picoinit.dis:  ../init/picoinit.b
 #		cd ../init; mk picoinit.dis
 
+
+install:V:  i$CONF.uf2
+	cp i$CONF.uf2 /media/pi/RPI-RP2/

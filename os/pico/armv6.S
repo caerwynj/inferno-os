@@ -7,24 +7,6 @@
 
 
 /*
- * ulong _tas(ulong*);
- */
-	.align	2
-	.global	_tas
-	.type	_tas, %function
-_tas:
-	@ args = 0, pretend = 0, frame = 0
-	@ frame_needed = 0, uses_anonymous_args = 0
-	@ link register save eliminated.
-	@ lr needed for prologue
-	mov	r3, #1
-	mov	r1, r0
-	#swp	r0, r3, [r1]
-	bx	lr
-	.size	_tas, .-_tas
-
-
-/*
  *  void		FPsave(void*);
  */
         .align  2
@@ -52,38 +34,37 @@ FPrestore:
 #define	FN(x)	.type x,%function; .global x; x
 #define	RET	bx lr
 
-FN(islo):
+FN(setlabel):
+	mov r2, r13
+	mov r3, r14
+	str r2, [r0]
+	str r3, [r0, #4]
+	mov r0, #0
 	RET
+
+FN(gotolabel):
+	ldr r2, [r0]
+	ldr r3, [r0, #4]
+	mov r13, r2
+	mov r14, r3
+	mov r0, #1
+	RET
+
+FN(getpc):
+	mov r0, r14
+	RET
+
 	
 FN(coherence):
-	RET
-
-
-FN(splhi):
+	isb
+	dsb
 	RET
 	
 FN(spllo):
+	cpsie i
 	RET
 
-FN(splx):
-	RET
-
-FN(splxpc):
-	RET
-
-FN(setlabel):
-	RET
-	
-FN(gotolabel):
-	RET
-	
 FN(idlehands):
+	cpsie i
+	wfi
 	RET
-	
-FN(setpanic):
-	RET
-
-
-FN(dumpstack):
-	RET
-	
