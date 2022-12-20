@@ -4,12 +4,13 @@
 #include "dat.h"
 #include "fns.h"
 #include "io.h"
+#include "../port/uart.h"
 #include "../port/error.h"
 #include "interp.h"
 
 #include "pico.root.h"
 
-ulong ndevs = 16;
+ulong ndevs = 17;
 extern Dev rootdevtab;
 extern Dev consdevtab;
 extern Dev envdevtab;
@@ -18,7 +19,8 @@ extern Dev pipedevtab;
 extern Dev progdevtab;
 extern Dev srvdevtab;
 extern Dev dupdevtab;
-Dev* devtab[16]={
+extern Dev uartdevtab;
+Dev* devtab[17]={
 	&rootdevtab,
 	&consdevtab,
 	&envdevtab,
@@ -27,6 +29,7 @@ Dev* devtab[16]={
 	&progdevtab,
 	&srvdevtab,
 	&dupdevtab,
+	&uartdevtab,
 	nil,
 };
 
@@ -41,6 +44,12 @@ void modinit(void){
 	mathmodinit();
 	sysmodinit();
 }
+
+extern PhysUart picophysuart;
+PhysUart* physuart[] = {
+	&picophysuart,
+	nil,
+};
 
 	ulong main_pool_pcnt = 50;
 	ulong heap_pool_pcnt = 40;

@@ -54,7 +54,7 @@ int main() {
 			conf.ialloc, conf.nproc);
 	poolinit();
 	poolsizeinit();
-	//uartconsinit();
+	uartconsinit();
 	//screeninit();
 	//trapinit();
 	timersinit();

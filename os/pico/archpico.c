@@ -191,7 +191,7 @@ rom_version(void)
 }
 
 void
-inferno_panic(const char *fmt, ...)
+__wrap_panic(const char *fmt, ...)
 {
 	int n;
 	va_list arg;
@@ -205,8 +205,7 @@ inferno_panic(const char *fmt, ...)
 	buf[n] = '\n';
 	//dumpstack();
 
-#undef panic
-	panic(buf);
+	__real_panic(buf);
 	
 }
 

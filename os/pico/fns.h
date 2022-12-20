@@ -22,14 +22,14 @@ uint rom_version(void);
 uint clock_sys_freq(void);
 void clockinit(void);
 uvlong getcpuid(void);
-void inferno_panic(const char *, ...);
+
+void __wrap_panic(const char *, ...);
+void __real_panic(const char *, ...);
+
 int printf(const char *, ...);
 
 #define kmapinval()
 
 #define PTR2UINT(p)     ((uintptr)(p))
 #define UINT2PTR(i)     ((void*)(i))
-
-
-#define panic(...)	inferno_panic(__VA_ARGS__)
 

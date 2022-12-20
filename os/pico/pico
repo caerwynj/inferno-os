@@ -7,12 +7,14 @@ dev
 	prog
 	srv
 	dup
+	uart
 
 link
 	archpico
 
 misc
 	dump
+	uartpico
 lib
 	interp
 #	keyring
@@ -101,4 +103,4 @@ root
 	/dis/lib/bufio.dis
 	/dis/lib/string.dis
 	/dis/lib/arg.dis
-
+	/dis/lib/env.dis
