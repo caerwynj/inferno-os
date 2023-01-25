@@ -2,7 +2,6 @@ implement Init;
 
 include "sys.m";
 	sys: Sys;
-	print: import sys;
 include "draw.m";
 include "sh.m";
 
@@ -24,14 +23,39 @@ init()
 	sys->bind("#e", "/env", sys->MREPL|sys->MCREATE);	# environment
 	
 	sys->print("binds done\n");
-	sh := load Command "/dis/pwd.dis";
+	
+	setsysname("ipico");			# set system name
+	sys->chdir("/");
+
+	sh := load Command "/dis/tiny/sh.dis";
 	if(sh == nil){
 		err(sys->sprint("can't load %s: %r", Sh->PATH));
 	}
 	
 	sys->print("loaded module.dis\n");
-	spawn sh->init(nil, nil);
+	sys->fprint(sys->fildes(2), "print to stderr\n");
+	
+	spawn sh->init(nil, "sh"  :: nil);
 	sys->print("spawned\n");
+	
+}
+
+setsysname(def: string)
+{
+	v := array of byte def;
+
+	fd := sys->open("/env/sysname", sys->OREAD);
+	if(fd != nil){
+		buf := array[Sys->NAMEMAX] of byte;
+		nr := sys->read(fd, buf, len buf);
+		while(nr > 0 && buf[nr-1] == byte '\n')
+			nr--;
+		if(nr > 0)
+			v = buf[0:nr];
+	}
+	fd = sys->open("/dev/sysname", sys->OWRITE);
+	if(fd != nil)
+		sys->write(fd, v, len v);
 }
 
 err(s: string)

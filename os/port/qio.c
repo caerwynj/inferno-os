@@ -15,7 +15,7 @@ static ulong qcopycnt;
 
 static int debugging;
 
-#define QDEBUG	if(0)
+#define QDEBUG	if(1)
 
 /*
  *  IO queues

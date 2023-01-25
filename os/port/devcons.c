@@ -726,7 +726,7 @@ fddump()
 	int i;
 	Chan *c;
 
-	p = proctab(6);
+	p = proctab(3);
 	o = p->env;
 	for(i = 0; i <= o->fgrp->maxfd; i++) {
 		if((c = o->fgrp->fd[i]) == nil)

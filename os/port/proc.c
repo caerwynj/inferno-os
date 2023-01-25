@@ -86,9 +86,9 @@ sched(void)
 {
 	if(up) {
 		splhi();
-		procsave(up);
+		procsave(&up->fpsave);
 		if(setlabel(&up->sched)) {
-			/* procrestore(up); */
+			procrestore(&up->fpsave);
 			spllo();
 			return;
 		}

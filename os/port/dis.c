@@ -303,7 +303,7 @@ swiprog(Prog *p)
 			return;
 		}
 	}
-	/*print("didn't find\n");*/
+	print("didn't find\n");
 }
 
 static Prog*

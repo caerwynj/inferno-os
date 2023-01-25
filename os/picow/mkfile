@@ -1,0 +1,51 @@
+<mkconfig
+
+CONF=pico
+CONFLIST=pico
+
+#SYSTARG=$OSTARG
+OBJTYPE=arm
+INSTALLDIR=$ROOT/Inferno/$OBJTYPE/bin
+
+
+<| $SHELLNAME ../port/mkdevlist $CONF
+
+OBJ=\
+	main.$O\
+	armv6.$O\
+	$IP\
+	$DEVS\
+	$ETHERS\
+	$LINKS\
+	$PORT\
+	$MISC\
+	$OTHERS\
+	$CONF.root.$O\
+
+LIBNAMES=${LIBS:%=lib%.a}
+LIBDIRS=$LIBS
+
+HFILES=\
+	mem.h\
+	dat.h\
+	fns.h\
+	io.h\
+
+KERNDATE=`{$NDATE}
+
+default:V: i$CONF.uf2
+
+i$CONF: $OBJ $CONF.c $CONF.root.h $LIBNAMES
+	$CC $CFLAGS -DKERNDATE=$KERNDATE $CONF.c
+	$LD $LDFLAGS -o $target $OBJ $CONF.$O $LIBFILES  bs2_default_padded_checksummed.S 
+
+i$CONF.uf2: i$CONF
+	cp i$CONF i$CONF.elf
+	strip i$CONF.elf
+	elf2uf2 i$CONF.elf i$CONF.uf2
+
+<../port/portmkfile
+
+
+install:V:  i$CONF.uf2
+	cp i$CONF.uf2 /media/pi/RPI-RP2/

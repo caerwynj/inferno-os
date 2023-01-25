@@ -479,7 +479,7 @@ uartctl(Uart *p, char *cmd)
 }
 
 static long
-uartwrite(Chan *c, void *buf, long n, vlong)
+uartwrite(Chan *c, void *buf, long n, vlong z)
 {
 	Uart *p;
 	char *cmd;
