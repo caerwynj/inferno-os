@@ -35,16 +35,40 @@ FPrestore:
 #define	RET	bx lr
 
 FN(setlabel):
+	str r4, [r0, #0]
+	str r5, [r0, #4]
+	str r6, [r0, #8]
+	str r7, [r0, #12]
+	mov r1, r8
+	str r1, [r0, #16]
+	mov r1, r9
+	str r1, [r0, #20]
+	mov r1, r10
+	str r1, [r0, #24]
+	mov r1, r11
+	str r1, [r0, #28]
 	mov r2, r13
 	mov r3, r14
-	str r2, [r0]
-	str r3, [r0, #4]
+	str r2, [r0, #32]
+	str r3, [r0, #36]
 	mov r0, #0
 	RET
 
 FN(gotolabel):
-	ldr r2, [r0]
-	ldr r3, [r0, #4]
+	ldr r4, [r0, #0]
+	ldr r5, [r0, #4]
+	ldr r6, [r0, #8]
+	ldr r7, [r0, #12]
+	ldr r1, [r0, #16]
+	mov r8, r1
+	ldr r1, [r0, #20]
+	mov r9, r1
+	ldr r1, [r0, #24]
+	mov r10, r1
+	ldr r1, [r0, #28]
+	mov r11, r1
+	ldr r2, [r0, #32]
+	ldr r3, [r0, #36]
 	mov r13, r2
 	mov r14, r3
 	mov r0, #1
@@ -73,31 +97,7 @@ FN(idlehands):
 /* Save the mach part of the current proc */
 /* TODO this should also call FPsave  */
 FN(procsave):
-	str r4, [r0, #0]
-	str r5, [r0, #4]
-	str r6, [r0, #8]
-	str r7, [r0, #12]
-	mov r1, r8
-	str r1, [r0, #16]
-	mov r1, r9
-	str r1, [r0, #20]
-	mov r1, r10
-	str r1, [r0, #24]
-	mov r1, r11
-	str r1, [r0, #28]
 	RET
 	
 FN(procrestore):
-	ldr r4, [r0, #0]
-	ldr r5, [r0, #4]
-	ldr r6, [r0, #8]
-	ldr r7, [r0, #12]
-	ldr r1, [r0, #16]
-	mov r8, r1
-	ldr r1, [r0, #20]
-	mov r9, r1
-	ldr r1, [r0, #24]
-	mov r10, r1
-	ldr r1, [r0, #28]
-	mov r11, r1
 	RET

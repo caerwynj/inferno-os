@@ -115,10 +115,8 @@ init(ctxt: ref Context, argv: list of string)
 	for(;;){
 		sys->print("%s", prompt);
 		n = sys->read(stdin, buf, len buf);
-		sys->print("read %d bytes\n", n);
 		if(n <= 0)
 			break;
-		sys->print("read %s\n", string buf[0:n]);
 		arg = tokenize(string buf[0:n]);
 		if(arg != nil)
 			runit(ctxt, parseit(arg));
@@ -219,7 +217,6 @@ exec(ctxt: ref Context, args: list of string, console: ref Sys->FD)
 		}
 	}
 
-	sys->print("exec: %s\n", file);
 	c->init(ctxt, args);
 }
 

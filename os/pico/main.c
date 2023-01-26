@@ -99,7 +99,7 @@ confinit(void)
 	conf.npage = conf.npage0 + conf.npage1;
 	conf.ialloc = (((conf.npage*(main_pool_pcnt))/100)/2)*BY2PG;
 
-	conf.nproc = 10 + ((conf.npage*BY2PG)/MB)*5;
+	conf.nproc = 5 + ((conf.npage*BY2PG)/MB)*5;
 	conf.nmach = 1;
 
 	active.machs = 1;
