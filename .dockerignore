@@ -5,7 +5,8 @@
 *.sbl
 
 # the following are copied from .hgignore
-**/*.[8qkv5967o]
+# don't ignore *.56789 otherwise we lose font files
+**/*.[qkvo]
 **/*.obj
 **/[8qkv965o].out
 **/[8qkv965o].emu
