@@ -38,10 +38,8 @@ extern unsigned char root29code[];
 extern int root29len;
 extern unsigned char root30code[];
 extern int root30len;
-extern unsigned char root31code[];
-extern int root31len;
-int rootmaxq = 32;
-Dirtab roottab[32] = {
+int rootmaxq = 31;
+Dirtab roottab[31] = {
 	"",	{0, 0, QTDIR},	 0,	0555,
 	"chan",	{1, 0, QTDIR},	 0,	0555,
 	"dev",	{2, 0, QTDIR},	 0,	0555,
@@ -73,9 +71,8 @@ Dirtab roottab[32] = {
 	"string.dis",	{28, 0, QTFILE},	 0,	0444,
 	"arg.dis",	{29, 0, QTFILE},	 0,	0444,
 	"env.dis",	{30, 0, QTFILE},	 0,	0444,
-	"filepat.dis",	{31, 0, QTFILE},	 0,	0444,
 };
-Rootdata rootdata[32] = {
+Rootdata rootdata[31] = {
 	0,	 &roottab[1],	 8,	nil,
 	0,	 nil,	 0,	 nil,
 	0,	 nil,	 0,	 nil,
@@ -87,7 +84,7 @@ Rootdata rootdata[32] = {
 	0,	 root11code,	 0,	 &root11len,
 	3,	 &roottab[21],	 2,	nil,
 	3,	 &roottab[23],	 1,	nil,
-	3,	 &roottab[24],	 8,	nil,
+	3,	 &roottab[24],	 7,	nil,
 	3,	 root13code,	 0,	 &root13len,
 	3,	 root14code,	 0,	 &root14len,
 	3,	 root15code,	 0,	 &root15len,
@@ -107,5 +104,4 @@ Rootdata rootdata[32] = {
 	11,	 root28code,	 0,	 &root28len,
 	11,	 root29code,	 0,	 &root29len,
 	11,	 root30code,	 0,	 &root30len,
-	11,	 root31code,	 0,	 &root31len,
 };

@@ -1,5 +1,5 @@
 ROOT=/home/pi/github/inferno-pico
-PICOROOT=/home/pi/github/pico-labs
+PICOROOT=/home/pi/github/libpico
 SHELLTYPE=	sh
 SHELLNAME=	/bin/sh
 HOSTMODEL=	Posix

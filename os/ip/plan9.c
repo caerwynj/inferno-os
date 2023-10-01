@@ -29,7 +29,7 @@ commonerror(void)
 }
 
 int
-postnote(Proc *p, int, char *, int)
+postnote(Proc *p, int n, char * s, int m)
 {
 	swiproc(p, 0);
 	return 0;

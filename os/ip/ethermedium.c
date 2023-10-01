@@ -423,7 +423,7 @@ etherread6(void *a)
 }
 
 static void
-etheraddmulti(Ipifc *ifc, uchar *a, uchar *)
+etheraddmulti(Ipifc *ifc, uchar *a, uchar * s)
 {
 	uchar mac[6];
 	char buf[64];
@@ -445,7 +445,7 @@ etheraddmulti(Ipifc *ifc, uchar *a, uchar *)
 }
 
 static void
-etherremmulti(Ipifc *ifc, uchar *a, uchar *)
+etherremmulti(Ipifc *ifc, uchar *a, uchar * s)
 {
 	uchar mac[6];
 	char buf[64];

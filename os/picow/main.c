@@ -41,7 +41,7 @@ int main() {
 	printf("stack %x  pc  %x  main  %x\n", &n, getcallerpc(main), main);
 	printf("sp %x  pc %x,   end %x\n", a,  getpc(), end); 
 	printf("stacklimit %x, heaplimit %x, stacktop %x\n", __StackLimit, __HeapLimit, __StackTop);
-	printf("bss_start %x, bss_end%x\n",__bss_start__, __bss_end__);
+	printf("bss_start %x, bss_end %x\n",__bss_start__, __bss_end__);
 	printf("edata %x, end-edata %d\n", __data_end__, end-__data_end__);
 	
 	quotefmtinstall();
@@ -49,8 +49,8 @@ int main() {
 	xinit();
 	
 	
-	printf("Conf: base0=%x, npage0=%x, ialloc=%d, nproc=%d\n",
-			conf.base0, conf.npage0,
+	printf("Conf: base0=%x, npage=%d, ialloc=%d, nproc=%d\n",
+			conf.base0, conf.npage,
 			conf.ialloc, conf.nproc);
 	poolinit();
 	poolsizeinit();
@@ -62,9 +62,9 @@ int main() {
 	printinit();
 	//swcursorinit();
 	
-	print("\nARM %ld MHz id %8.8lux firmware: rev %d, mem: %ld\n"
-		,m->cpuhz/Mhz, getcpuid(), rom_version(), (conf.topofmem - KZERO));
-
+	print("\nARM %ld MHz id %8.8lux firmware: rev %d\n"
+		,m->cpuhz/Mhz, getcpuid(), rom_version() );   
+	printf("memory %lu\n", (SRAM_END - SRAM_BASE));
 	print("Inferno OS %s Vita Nuova\n", VERSION);
 	print("Ported to Raspberry Pi Pico (RP2040) by Caerwyn Jones\n\n");
 
@@ -99,7 +99,7 @@ confinit(void)
 	conf.npage = conf.npage0 + conf.npage1;
 	conf.ialloc = (((conf.npage*(main_pool_pcnt))/100)/2)*BY2PG;
 
-	conf.nproc = 10 + ((conf.npage*BY2PG)/MB)*5;
+	conf.nproc = 5 + ((conf.npage*BY2PG)/MB)*5;
 	conf.nmach = 1;
 
 	active.machs = 1;

@@ -32,7 +32,7 @@ Medium pktmedium =
  *  called with ifc wlock'd
  */
 static void
-pktbind(Ipifc*, int, char**)
+pktbind(Ipifc* ifc, int n, char** s)
 {
 }
 
@@ -40,7 +40,7 @@ pktbind(Ipifc*, int, char**)
  *  called with ifc wlock'd
  */
 static void
-pktunbind(Ipifc*)
+pktunbind(Ipifc* ifc)
 {
 }
 
@@ -48,7 +48,7 @@ pktunbind(Ipifc*)
  *  called by ipoput with a single packet to write
  */
 static void
-pktbwrite(Ipifc *ifc, Block *bp, int, uchar*)
+pktbwrite(Ipifc *ifc, Block *bp, int n, uchar* s)
 {
 	/* enqueue onto the conversation's rq */
 	bp = concatblock(bp);

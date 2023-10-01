@@ -121,7 +121,7 @@ netlogready(void *a)
 }
 
 long
-netlogread(Fs *f, void *a, ulong, long n)
+netlogread(Fs *f, void *a, ulong m, long n)
 {
 	int i, d;
 	char *p, *rptr;

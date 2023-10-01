@@ -59,3 +59,12 @@ static __inline uintptr getcallerpc(void* dummy) {
  	); 
 	return lr;
 }
+
+
+# Networking
+
+Using Cyw43 drvier from pico-sdk.
+Not using lwip or the pico_cyw43_driver and it's async context.
+Will use inferno ip stack.  Use the etherif.h ether device interface to be used by devip.
+ethercyw43.c
+

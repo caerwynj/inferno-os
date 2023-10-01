@@ -833,6 +833,7 @@ ipifcctl(Conv* c, char**argv, int argc)
 	return "unsupported ctl";
 }
 
+int
 ipifcstats(Proto *ipifc, char *buf, int len)
 {
 	return ipstats(ipifc->f, buf, len);
@@ -1557,14 +1558,18 @@ ipifcremmulti(Conv *c, uchar *ma, uchar *ia)
 static char*
 ipifcjoinmulti(Ipifc *ifc, char **argv, int argc)
 {
-	USED(ifc, argv, argc);
+	USED(ifc);
+	USED(argv);
+	USED(argc);
 	return nil;
 }
 
 static char*
 ipifcleavemulti(Ipifc *ifc, char **argv, int argc)
 {
-	USED(ifc, argv, argc);
+	USED(ifc);
+	USED(argv);
+	USED(argc);
 	return nil;
 }
 

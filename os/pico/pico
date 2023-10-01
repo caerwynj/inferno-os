@@ -109,3 +109,4 @@ root
 	/dis/lib/string.dis
 	/dis/lib/arg.dis
 	/dis/lib/env.dis
+	/dis/lib/filepat.dis

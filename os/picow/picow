@@ -8,10 +8,22 @@ dev
 	srv
 	dup
 	uart
-#	ip	ipif6-posix ipaux
+	ip	ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium netaux
+
+ip
+#	il
+	tcp
+	udp
+#	rudp
+#	igmp
+	ipifc
+	icmp
+	icmp6
+#	ipmux
 
 link
 	archpico
+	ethermedium
 
 misc
 	dump
@@ -63,8 +75,8 @@ port
 
 code
 #	int kernel_pool_pcnt = 10;
-	ulong main_pool_pcnt = 50;
-	ulong heap_pool_pcnt = 40;
+	ulong main_pool_pcnt = 75;
+	ulong heap_pool_pcnt = 18;
 	ulong image_pool_pcnt = 0;
 	int cflag = 0;
 

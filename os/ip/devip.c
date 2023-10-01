@@ -176,7 +176,7 @@ ip1gen(Chan *c, int i, Dir *dp)
 }
 
 static int
-ipgen(Chan *c, char*, Dirtab*, int, int s, Dir *dp)
+ipgen(Chan *c, char* jun, Dirtab* tab, int ntab, int s, Dir *dp)
 {
 	Qid q;
 	Conv *cv;

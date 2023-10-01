@@ -6,7 +6,7 @@
 #include "hardware_regs/intctrl.h"
 #include "sync.h"
 #include "timer.h"
-#include "time.h"
+#include "pico_time.h"
 #include "unique_id.h"
 
 #undef offsetof

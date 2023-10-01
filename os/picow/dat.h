@@ -32,6 +32,14 @@ struct Lock
 
 struct Label
 {
+	uint r4;
+	uint r5;
+	uint r6;
+	uint r7;
+	uint r8;
+	uint r9;
+	uint r10;
+	uint r11;
 	ulong   sp;
 	ulong   pc;
 };
