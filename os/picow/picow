@@ -9,6 +9,7 @@ dev
 	dup
 	uart
 	ip	ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium netaux
+	gpio
 
 ip
 #	il
@@ -111,8 +112,7 @@ root
 	/dis/cd.dis
 	/dis/bind.dis
 	/dis/mount.dis
-	/dis/math/fibonacci.dis
-	/dis/math/genprimes.dis
+	/dis/blink.dis
 	
 	/dis/lib/readdir.dis
 	/dis/lib/workdir.dis

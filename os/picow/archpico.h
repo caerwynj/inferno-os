@@ -8,6 +8,7 @@
 #include "timer.h"
 #include "pico_time.h"
 #include "unique_id.h"
+#include "gpio.h"
 
 #undef offsetof
 #undef assert

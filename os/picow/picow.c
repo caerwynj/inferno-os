@@ -10,7 +10,7 @@
 
 #include "picow.root.h"
 
-ulong ndevs = 18;
+ulong ndevs = 19;
 extern Dev rootdevtab;
 extern Dev consdevtab;
 extern Dev envdevtab;
@@ -21,7 +21,8 @@ extern Dev srvdevtab;
 extern Dev dupdevtab;
 extern Dev uartdevtab;
 extern Dev ipdevtab;
-Dev* devtab[18]={
+extern Dev gpiodevtab;
+Dev* devtab[19]={
 	&rootdevtab,
 	&consdevtab,
 	&envdevtab,
@@ -32,6 +33,7 @@ Dev* devtab[18]={
 	&dupdevtab,
 	&uartdevtab,
 	&ipdevtab,
+	&gpiodevtab,
 	nil,
 };
 

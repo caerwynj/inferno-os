@@ -5,6 +5,7 @@ TARG=\
 	kill.dis\
 	rm.dis\
 	sh.dis\
+	ls.dis\
 
 MODULES=\
 

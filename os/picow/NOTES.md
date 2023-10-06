@@ -68,3 +68,12 @@ Not using lwip or the pico_cyw43_driver and it's async context.
 Will use inferno ip stack.  Use the etherif.h ether device interface to be used by devip.
 ethercyw43.c
 
+
+# Issues
+Memory  ialloc queue is taking up memory.
+Is there a queue that is not being consumed?
+
+
+Make libpico/include/config_autogen.h dynamic.. Hardcodes board type. boards_pico_w.h or boards_pico.h
+
+

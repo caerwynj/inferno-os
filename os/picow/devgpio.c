@@ -1,28 +1,51 @@
+/*
+ * Raspberry Pi Pico GPIO
+ */
+
 #include	"u.h"
 #include	"../port/lib.h"
 #include	"mem.h"
 #include	"dat.h"
 #include	"fns.h"
 #include	"../port/error.h"
-#include	"io.h"
+#include "archpico.h"
+
+enum {
+	// GPIO registers
+	GPLEV = 0x7e200034,
+};
 
 enum{
-	Qdir,
-	Qgpioset,
-	Qgpioclear,
-	Qgpioedge,
-	Qgpioctl,
-	Qgpiostatus,
+	Qdir = 0,
+	Qgpio,
 };
 
 Dirtab gpiodir[]={
-	".",				{Qdir,0},			0,	0555,
-	"gpioset",			{Qgpioset, 0},		0,	0664,
-	"gpioclear",		{Qgpioclear, 0},		0,	0664,
-	"gpioedge",		{Qgpioedge, 0},		0,	0664,
-	"gpioctl",			{Qgpioctl,0},		0,	0664,
-	"gpiostatus",		{Qgpiostatus,0},	0,	0444,
+	".",	{Qdir, 0, QTDIR},	0,	0555,
+	"gpio",	{Qgpio, 0},	0,	0664,
 };
+
+enum {
+	// commands
+	CMfunc,
+	CMset,
+	CMpullup,
+	CMpulldown,
+	CMfloat,
+};
+
+static Cmdtab gpiocmd[] = {
+	{CMfunc, "function", 3},
+	{CMset, "set", 3},
+	{CMpullup, "pullup", 2},
+	{CMpulldown, "pulldown", 2},
+	{CMfloat, "float", 2},
+};
+
+static char *funcs[] = { "in", "out", "alt5", "alt4", "alt0",
+	"alt1", "alt2", "alt3", "pulse"};
+static int ifuncs[] = { Input, Output, Alt5, Alt4, Alt0,
+	Alt1, Alt2, Alt3, -1};
 
 static Chan*
 gpioattach(char* spec)
@@ -30,14 +53,14 @@ gpioattach(char* spec)
 	return devattach('G', spec);
 }
 
-static Walkqid*
-gpiowalk(Chan* c, Chan *nc, char **name, int nname)
+static Walkqid*	 
+gpiowalk(Chan* c, Chan *nc, char** name, int nname)
 {
 	return devwalk(c, nc, name, nname, gpiodir, nelem(gpiodir), devgen);
 }
 
 static int	 
-gpiostat(Chan* c, uchar *dp, int n)
+gpiostat(Chan* c, uchar* dp, int n)
 {
 	return devstat(c, dp, n, gpiodir, nelem(gpiodir), devgen);
 }
@@ -49,97 +72,73 @@ gpioopen(Chan* c, int omode)
 }
 
 static void	 
-gpioclose(Chan*)
+gpioclose(Chan* c)
 {
 }
 
 static long	 
-gpioread(Chan* c, void *buf, long n, vlong offset)
+gpioread(Chan* c, void *buf, long n, vlong v)
 {
-	char str[128];
-	GpioReg *g;
-	
-	if(c->qid.type & QTDIR)
+	char lbuf[20];
+	char *e;
+
+	USED(c);
+	if(c->qid.path == Qdir)
 		return devdirread(c, buf, n, gpiodir, nelem(gpiodir), devgen);
-
-	g = GPIOREG;
-	switch((ulong)c->qid.path){
-	case Qgpioset:
-	case Qgpioclear:
-		sprint(str, "%8.8lux", g->gplr);
-		break;
-	case Qgpioedge:
-		sprint(str, "%8.8lux", g->gedr);
-		break;
-	case Qgpioctl:
-		/* return 0; */
-	case Qgpiostatus:
-		snprint(str, sizeof(str), "GPDR:%8.8lux\nGRER:%8.8lux\nGFER:%8.8lux\nGAFR:%8.8lux\nGPLR:%8.8lux\n", g->gpdr, g->grer, g->gfer, g->gafr, g->gplr);
-		break;
-	default:
-		error(Ebadarg);
-		return 0;
-	}
-	return readstr(offset, buf, n, str);
+	e = lbuf + sizeof(lbuf);
+	seprint(lbuf, e, "%08ulx\n", gpio_get_all()  );
+	return readstr(0, buf, n, lbuf);
 }
 
 static long	 
-gpiowrite(Chan *c, void *a, long n, vlong)
+gpiowrite(Chan* c, void *buf, long n, vlong v)
 {
-	char buf[128], *field[3];
-	int pin, set;
-	ulong *r;
-	GpioReg *g;
+	Cmdbuf *cb;
+	Cmdtab *ct;
+	int pin, i;
 
-	if(n >= sizeof(buf))
-		n = sizeof(buf)-1;
-	memmove(buf, a, n);
-	buf[n] = 0;	
-	g = GPIOREG;
-	switch((ulong)c->qid.path){
-	case Qgpioset:
-		g->gpsr = strtol(buf, 0, 16);
-		break;
-	case Qgpioclear:
-		g->gpcr = strtol(buf, 0, 16);
-		break;
-	case Qgpioedge:
-		g->gedr = strtol(buf, 0, 16);
-		break;
-	case Qgpioctl:
-		if(getfields(buf, field, 3, 1, " \n\t") == 3) {
-			pin = strtol(field[1], 0, 0);
-			if(pin < 0 || pin >= 32)
-				error(Ebadarg);
-			set = strtol(field[2], 0, 0);
-			switch(*field[0]) {
-			case 'd':
-				r = &g->gpdr;
-				break;
-			case 'r':
-				r = &g->grer;
-				break;
-			case 'f':
-				r = &g->gfer;
-				break;
-			case 'a':
-				r = &g->gafr;
-				break;
-			default:
-				error(Ebadarg);
-				return 0;
-			}
-			if(set)
-				*r |= 1 << pin;
-			else
-				*r &= ~(1 << pin);
-		} else
-			error(Ebadarg);
-		break;
-	default:
-		error(Ebadusefd);
-		return 0;
+	if(c->qid.type & QTDIR)
+		error(Eperm);
+	cb = parsecmd(buf, n);
+	if(waserror()) {
+		free(cb);
+		nexterror();
 	}
+	ct = lookupcmd(cb, gpiocmd, nelem(gpiocmd));
+	pin = atoi(cb->f[1]);
+	switch(ct->index) {
+	case CMfunc:
+		for(i = 0;
+			i < nelem(funcs)
+				&& strcmp(funcs[i], cb->f[2]) != 0;
+			++i);
+		if(i >= nelem(funcs))
+			error(Ebadctl);
+		if(ifuncs[i] == -1) {
+			gpio_set_dir(pin, Output);
+			microdelay(2);
+			gpio_set_dir(pin, Input);
+		}
+		else {
+			gpio_init(pin);
+			gpio_set_dir(pin, ifuncs[i]);
+		}
+		break;
+	case CMset:
+		gpio_put(pin, atoi(cb->f[2]));
+		break;
+	case CMpullup:
+		gpio_pull_up(pin);
+		break;
+	case CMpulldown:
+		gpio_pull_down(pin);
+		break;
+	case CMfloat:
+		gpio_deinit(pin);
+		break;
+	}
+	free(cb);
+	poperror();
 	return n;
 }
 
