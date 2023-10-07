@@ -61,6 +61,7 @@ int main() {
 	clockinit();
 	printinit();
 	//swcursorinit();
+
 	
 	print("\nARM %ld MHz id %8.8lux firmware: rev %d\n"
 		,m->cpuhz/Mhz, getcpuid(), rom_version() );   
@@ -71,6 +72,7 @@ int main() {
 	procinit();
 	links();
 	chandevreset();
+	printq = nil;
 
 	eve = strdup("inferno");
 
