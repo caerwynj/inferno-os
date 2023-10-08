@@ -145,5 +145,7 @@ devroot.$O:	$CONF.root.h
 $CONF.$O:	$CONF.root.h
 $CONF.root.c $CONF.root.h: $CONF ../init/$INIT.dis ../port/mkroot $ROOTFILES
 	$SHELLNAME ../port/mkroot $CONF
+	sed 's/=/ __attribute__ ((section(".flashdata"))) =/' $CONF.root.c > flash.root.c
+	mv flash.root.c $CONF.root.c
 
 %.$O:	$ROOT/$SYSTARG/$OBJTYPE/include/u.h ../port/lib.h mem.h dat.h fns.h io.h ../port/error.h ../port/portdat.h ../port/portfns.h

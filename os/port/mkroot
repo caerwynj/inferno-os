@@ -70,8 +70,8 @@ END{
 			else {
 				if (system(data2s " root" q " <" src[i] " >>" rootdata) != 0)
 					exit 1;
-				print("extern unsigned char root" q "code[];");
-				print("extern int root" q "len;");
+				print("extern unsigned char root" q "code[] __attribute__ ((section(\".flashdata\")))  ;");
+				print("extern int root" q "len __attribute__ ((section(\".flashdata\"))) ;");
 			}
 		}
 
@@ -94,7 +94,7 @@ END{
 
 		print("int rootmaxq = " qid ";");
 
-		print("Dirtab roottab[" qid "] = {");
+		print("Dirtab roottab[" qid "] __attribute__ ((section(\".flashdata\"))) = {");
 		for (oq = 0; oq < qid; oq++) {
 			q = unsort[oq];
 			if (!isdir[q])
@@ -104,7 +104,7 @@ END{
 		}
 		print("};");
 
-		print("Rootdata rootdata[" qid "] = {");
+		print("Rootdata rootdata[" qid "] __attribute__ ((section(\".flashdata\"))) = {");
 		for (oq = 0; oq < qid; oq++) {
 			q = unsort[oq];
 			if (!isdir[q])

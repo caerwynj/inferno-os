@@ -103,6 +103,8 @@ root
 	/osinit.dis
 	
 	/dis/tiny/sh.dis
+	/dis/tiny/broke.dis
+	/dis/tiny/rm.dis
 	/dis/ls.dis
 	/dis/ps.dis
 	/dis/ns.dis
@@ -112,8 +114,28 @@ root
 	/dis/cd.dis
 	/dis/bind.dis
 	/dis/mount.dis
+	/dis/sleep.dis
+	/dis/grep.dis
+	/dis/math/fibonacci.dis
+	/dis/math/crackerbarrel.dis
+	/dis/math/genprimes.dis
+	/dis/math/primes.dis
+	/dis/fc.dis
+	/dis/read.dis
+	/dis/stack.dis
+	/dis/sum.dis
+	/dis/tail.dis
+	/dis/xd.dis	
+	/dis/zeros.dis
+	/dis/wc.dis
+	/dis/test.dis
+	/dis/tee.dis
+	/dis/time.dis
+	/dis/tr.dis
+	/dis/env.dis
 	/dis/blink.dis
-	
+	/dis/morse.dis
+
 	/dis/lib/readdir.dis
 	/dis/lib/workdir.dis
 	/dis/lib/daytime.dis
@@ -121,3 +143,6 @@ root
 	/dis/lib/string.dis
 	/dis/lib/arg.dis
 	/dis/lib/env.dis
+	/dis/lib/regex.dis
+	/dis/lib/debug.dis
+	/dis/lib/crc.dis

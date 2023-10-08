@@ -9,6 +9,8 @@ extern Rootdata rootdata[];
 extern Dirtab roottab[];
 extern int	rootmaxq;
 
+#define rootsize(x)	(rootdata[x].sizep ? *rootdata[x].sizep : rootdata[x].size)
+
 static Chan*
 rootattach(char *spec)
 {
@@ -18,6 +20,7 @@ rootattach(char *spec)
 
 	if(*spec)
 		error(Ebadspec);
+/*  rootdata is stored in RO FLash.
 	for (i = 0; i < rootmaxq; i++){
 		r = &rootdata[i];
 		if (r->sizep){
@@ -26,6 +29,7 @@ rootattach(char *spec)
 			roottab[i].length = len;
 		}
 	}
+*/
 	return devattach('/', spec);
 }
 
@@ -34,6 +38,7 @@ rootgen(Chan *c, char *name, Dirtab *tab, int nd, int s, Dir *dp)
 {
 	int p, i;
 	Rootdata *r;
+	int flen = 0;
 
 	if(s == DEVDOTDOT){
 		p = rootdata[c->qid.path].dotdot;
@@ -54,9 +59,10 @@ rootgen(Chan *c, char *name, Dirtab *tab, int nd, int s, Dir *dp)
 		isdir(c);
 		r = &rootdata[(int)c->qid.path];
 		tab = r->ptr;
-		for(i=0; i<r->size; i++, tab++)
+		for(i=0; i< r->size; i++, tab++)
 			if(strcmp(tab->name, name) == 0){
-				devdir(c, tab->qid, tab->name, tab->length, eve, tab->perm, dp);
+				flen = rootsize(tab->qid.path);
+				devdir(c, tab->qid, tab->name, flen, eve, tab->perm, dp);
 				return 1;
 			}
 		return -1;
@@ -64,7 +70,8 @@ rootgen(Chan *c, char *name, Dirtab *tab, int nd, int s, Dir *dp)
 	if(s >= nd)
 		return -1;
 	tab += s;
-	devdir(c, tab->qid, tab->name, tab->length, eve, tab->perm, dp);
+	flen = rootsize(tab->qid.path);
+	devdir(c, tab->qid, tab->name,  flen, eve, tab->perm, dp);
 	return 1;
 }
 
@@ -76,7 +83,7 @@ rootwalk(Chan *c, Chan *nc, char **name, int nname)
 	p = c->qid.path;
 	if(nname == 0)
 		p = rootdata[p].dotdot;
-	return devwalk(c, nc, name, nname, rootdata[p].ptr, rootdata[p].size, rootgen);
+	return devwalk(c, nc, name, nname, rootdata[p].ptr, rootsize(p), rootgen);
 }
 
 static int
@@ -85,7 +92,7 @@ rootstat(Chan *c, uchar *dp, int n)
 	int p;
 
 	p = rootdata[c->qid.path].dotdot;
-	return devstat(c, dp, n, rootdata[p].ptr, rootdata[p].size, rootgen);
+	return devstat(c, dp, n, rootdata[p].ptr, rootsize(p), rootgen);
 }
 
 static Chan*
@@ -94,7 +101,7 @@ rootopen(Chan *c, int omode)
 	int p;
 
 	p = rootdata[c->qid.path].dotdot;
-	return devopen(c, omode, rootdata[p].ptr, rootdata[p].size, rootgen);
+	return devopen(c, omode, rootdata[p].ptr, rootsize(p), rootgen);
 }
 
 /*
@@ -113,8 +120,8 @@ rootread(Chan *c, void *buf, long n, vlong offset)
 
 	p = c->qid.path;
 	if(c->qid.type & QTDIR)
-		return devdirread(c, buf, n, rootdata[p].ptr, rootdata[p].size, rootgen);
-	len = rootdata[p].size;
+		return devdirread(c, buf, n, rootdata[p].ptr, rootsize(p), rootgen);
+	len = *rootdata[p].sizep;
 	if(offset < 0 || offset >= len)
 		return 0;
 	if(offset+n > len)
