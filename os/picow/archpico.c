@@ -8,12 +8,15 @@
 #include "mem.h"
 
 
+static spin_lock_t *hw_lock;
+
 void
 archinit(void)
 {
 	/* initialization for libpico */
 	clocks_init();
 	stdio_init_all();
+	hw_lock = spin_lock_init(PICO_SPINLOCK_ID_OS1);
 }
 
 void
@@ -54,7 +57,18 @@ kprocchild(Proc *p, void (*func)(void*), void *arg)
 ulong 
 _tas(ulong* lock)
 {
-	return atomic_flag_test_and_set(lock);
+	/* there is no synchronization primitive on Arm6-M architecture.
+	 * try RP2040 hardware spin lock; init a global spin_lock_t first.
+	 * spin_lock_unsafe_blocking() 
+	 * test and set lock
+	 * spin_unlock_unsafe()
+	 */
+
+	ulong l;
+	spin_lock_unsafe_blocking(hw_lock);
+	l = atomic_flag_test_and_set(lock);
+	spin_unlock_unsafe(hw_lock);
+	return l;
 }
 
 
@@ -145,15 +159,21 @@ clockintr(long alarmid, void *user_data)
 void
 timerset(uvlong next)
 {
-	add_alarm_in_us(next, clockintr, 0, 1);
+	add_alarm_in_ms(MS2HZ, clockintr, 0, 0);
 }
 
 uvlong
 fastticks(uvlong *hz)
 {
+/*
 	if(hz)
 		*hz = clock_sys_freq();
 	return time_us_64();
+*/
+
+	if(hz)
+		*hz = HZ;
+	return m->ticks;
 }
 
 uint

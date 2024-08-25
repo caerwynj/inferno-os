@@ -72,8 +72,8 @@ void (*ipprotoinit[])(Fs*) = {
 	nil,
 };
 
-	ulong main_pool_pcnt = 75;
-	ulong heap_pool_pcnt = 18;
+	ulong main_pool_pcnt = 60;
+	ulong heap_pool_pcnt = 32;
 	ulong image_pool_pcnt = 0;
 	int cflag = 0;
 	int consoleprint = 1;

@@ -4,6 +4,12 @@
 #define TK2SEC(t)   ((t)/HZ)    		/*! ticks to seconds */
 #define MS2TK(t)    	((t)/MS2HZ) 	/*! milliseconds to ticks */
 enum { Mhz = 1000 * 1000 };
+/*
+ * More accurate time
+ */
+#define CLOCKFREQ	3686400
+#define MS2TMR(t)	((ulong)(((uvlong)(t)*CLOCKFREQ)/1000))
+#define US2TMR(t)	((ulong)(((uvlong)(t)*CLOCKFREQ)/1000000))
 
 #define MACHP(n)    (n == 0 ? (Mach*)(m) : (Mach*)0)
 

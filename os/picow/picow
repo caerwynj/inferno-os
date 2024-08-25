@@ -76,8 +76,8 @@ port
 
 code
 #	int kernel_pool_pcnt = 10;
-	ulong main_pool_pcnt = 75;
-	ulong heap_pool_pcnt = 18;
+	ulong main_pool_pcnt = 60;
+	ulong heap_pool_pcnt = 32;
 	ulong image_pool_pcnt = 0;
 	int cflag = 0;
 
