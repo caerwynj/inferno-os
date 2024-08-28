@@ -9,6 +9,7 @@
 
 
 static spin_lock_t *hw_lock;
+static alarm_pool_t *alarm_pool;
 
 void
 archinit(void)
@@ -140,14 +141,8 @@ delay(int ms)
 	sleep_ms(ms);
 }
 
-void
-clockinit(void)
-{
-	/* add clockintr to the timer */
-}
-
 vlong
-clockintr(long alarmid, void *user_data)
+clockintr(long alarmid)
 {
 	Ureg ureg;
 	
@@ -155,25 +150,33 @@ clockintr(long alarmid, void *user_data)
 	timerintr(&ureg, 0);
 }
 
+void
+clockinit(void)
+{
+	/* add clockintr to the timer*/
+	hardware_alarm_claim(1);
+	hardware_alarm_set_callback(1, clockintr);
+}
 
 void
 timerset(uvlong next)
 {
-	add_alarm_in_ms(MS2HZ, clockintr, 0, 0);
+	int r;
+	absolute_time_t t;
+
+	update_us_since_boot(&t, next);
+	r = hardware_alarm_set_target(1, t);     
+	if(r == 1)
+		print("alarm target missed\n");
 }
 
 uvlong
 fastticks(uvlong *hz)
 {
-/*
+
 	if(hz)
 		*hz = clock_sys_freq();
 	return time_us_64();
-*/
-
-	if(hz)
-		*hz = HZ;
-	return m->ticks;
 }
 
 uint
