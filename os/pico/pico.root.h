@@ -1,47 +1,47 @@
-extern unsigned char root11code[];
-extern int root11len;
-extern unsigned char root12code[];
-extern int root12len;
-extern unsigned char root13code[];
-extern int root13len;
-extern unsigned char root14code[];
-extern int root14len;
-extern unsigned char root15code[];
-extern int root15len;
-extern unsigned char root16code[];
-extern int root16len;
-extern unsigned char root17code[];
-extern int root17len;
-extern unsigned char root18code[];
-extern int root18len;
-extern unsigned char root19code[];
-extern int root19len;
-extern unsigned char root20code[];
-extern int root20len;
-extern unsigned char root21code[];
-extern int root21len;
-extern unsigned char root22code[];
-extern int root22len;
-extern unsigned char root23code[];
-extern int root23len;
-extern unsigned char root24code[];
-extern int root24len;
-extern unsigned char root25code[];
-extern int root25len;
-extern unsigned char root26code[];
-extern int root26len;
-extern unsigned char root27code[];
-extern int root27len;
-extern unsigned char root28code[];
-extern int root28len;
-extern unsigned char root29code[];
-extern int root29len;
-extern unsigned char root30code[];
-extern int root30len;
-extern unsigned char root31code[];
-extern int root31len;
+extern unsigned char root11code[] __attribute__ ((section(".flashdata")))  ;
+extern int root11len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root12code[] __attribute__ ((section(".flashdata")))  ;
+extern int root12len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root13code[] __attribute__ ((section(".flashdata")))  ;
+extern int root13len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root14code[] __attribute__ ((section(".flashdata")))  ;
+extern int root14len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root15code[] __attribute__ ((section(".flashdata")))  ;
+extern int root15len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root16code[] __attribute__ ((section(".flashdata")))  ;
+extern int root16len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root17code[] __attribute__ ((section(".flashdata")))  ;
+extern int root17len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root18code[] __attribute__ ((section(".flashdata")))  ;
+extern int root18len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root19code[] __attribute__ ((section(".flashdata")))  ;
+extern int root19len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root20code[] __attribute__ ((section(".flashdata")))  ;
+extern int root20len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root21code[] __attribute__ ((section(".flashdata")))  ;
+extern int root21len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root22code[] __attribute__ ((section(".flashdata")))  ;
+extern int root22len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root23code[] __attribute__ ((section(".flashdata")))  ;
+extern int root23len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root24code[] __attribute__ ((section(".flashdata")))  ;
+extern int root24len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root25code[] __attribute__ ((section(".flashdata")))  ;
+extern int root25len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root26code[] __attribute__ ((section(".flashdata")))  ;
+extern int root26len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root27code[] __attribute__ ((section(".flashdata")))  ;
+extern int root27len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root28code[] __attribute__ ((section(".flashdata")))  ;
+extern int root28len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root29code[] __attribute__ ((section(".flashdata")))  ;
+extern int root29len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root30code[] __attribute__ ((section(".flashdata")))  ;
+extern int root30len __attribute__ ((section(".flashdata"))) ;
+extern unsigned char root31code[] __attribute__ ((section(".flashdata")))  ;
+extern int root31len __attribute__ ((section(".flashdata"))) ;
 int rootmaxq = 32;
-Dirtab roottab[32] = {
+Dirtab roottab[32] __attribute__ ((section(".flashdata"))) = {
 	"",	{0, 0, QTDIR},	 0,	0555,
 	"chan",	{1, 0, QTDIR},	 0,	0555,
 	"dev",	{2, 0, QTDIR},	 0,	0555,
@@ -75,7 +75,7 @@ Dirtab roottab[32] = {
 	"env.dis",	{30, 0, QTFILE},	 0,	0444,
 	"filepat.dis",	{31, 0, QTFILE},	 0,	0444,
 };
-Rootdata rootdata[32] = {
+Rootdata rootdata[32] __attribute__ ((section(".flashdata"))) = {
 	0,	 &roottab[1],	 8,	nil,
 	0,	 nil,	 0,	 nil,
 	0,	 nil,	 0,	 nil,

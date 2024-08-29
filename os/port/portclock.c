@@ -140,7 +140,7 @@ timerdel(Timer *dt)
 void
 hzclock(Ureg *ur)
 {
-	/* m->ticks++; */
+	m->ticks++;
 	if(m->proc)
 		m->proc->pc = ur->pc;
 
@@ -176,7 +176,6 @@ timerintr(Ureg *u, uvlong z)
 	int callhzclock;
 	static int sofar;
 
-	m->ticks++;
 	intrcount[m->machno]++;
 	callhzclock = 0;
 	tt = &timers[m->machno];
@@ -193,7 +192,7 @@ timerintr(Ureg *u, uvlong z)
 		if(when > now){
 			timerset(when);
 			iunlock(&tt->l);
-			/* if(callhzclock) */
+			if(callhzclock)
 				hzclock(u);
 			return;
 		}

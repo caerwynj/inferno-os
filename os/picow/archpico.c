@@ -147,6 +147,7 @@ clockintr(long alarmid)
 	Ureg ureg;
 	
 	ureg.pc = getcallerpc(0);
+	timersettick();
 	timerintr(&ureg, 0);
 }
 
@@ -156,18 +157,28 @@ clockinit(void)
 	/* add clockintr to the timer*/
 	hardware_alarm_claim(1);
 	hardware_alarm_set_callback(1, clockintr);
+	timersettick();
 }
 
 void
 timerset(uvlong next)
 {
+	USED(next);
+}
+
+void
+timersettick()
+{
 	int r;
 	absolute_time_t t;
 
-	update_us_since_boot(&t, next);
-	r = hardware_alarm_set_target(1, t);     
-	if(r == 1)
+	r = hardware_alarm_set_target(1, delayed_by_us(get_absolute_time(), 10000));
+	if(r == 1){
 		print("alarm target missed\n");
+		r = hardware_alarm_set_target(1, delayed_by_us(get_absolute_time(), 100000));
+		if(r == 1)
+			print("alarm missed again\n");
+	}
 }
 
 uvlong
@@ -175,14 +186,14 @@ fastticks(uvlong *hz)
 {
 
 	if(hz)
-		*hz = clock_sys_freq();
+		*hz =  clock_sys_freq(); 
 	return time_us_64();
 }
 
 uint
 clock_sys_freq()
 {
-	return clock_get_hz(clk_sys);
+	return 4000000;  /*clock_get_hz(clk_ref); */
 }
 
 void reboot(void){}
